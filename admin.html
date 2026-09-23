@@ -294,6 +294,34 @@
             text-align: center;
             color: #88654c;
         }
+
+        .product-image-preview {
+            width: 120px;
+            min-height: 90px;
+            margin: 0 0 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #88654c;
+            font-size: 12px;
+        }
+
+        .product-image-preview img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+        }
+
+        .image-help {
+            display: block;
+            margin-top: 5px;
+            color: #88654c;
+            font-size: 11px;
+        }
     </style>
 </head>
 
@@ -406,8 +434,11 @@
                             <select id="productoRubro"></select>
                         </div>
                         <div class="field">
-                            <label>Ícono (emoji)</label>
-                            <input type="text" id="productoIcono" placeholder="☕" maxlength="4">
+                            <label>Imagen</label>
+                            <select id="productoImagen">
+                                <option value="">Sin imagen</option>
+                            </select>
+                            <small class="image-help">Las imágenes se leen desde Storage. Configurá el bucket y la carpeta en el script.</small>
                         </div>
                         <div class="field">
                             <label>Estado</label>
@@ -453,6 +484,11 @@
 
         let rubrosCache = [];
         let tamaniosCache = [];
+        let imagenesCache = [];
+
+        // Cambiar solamente si tu bucket/carpeta tienen otros nombres.
+        const STORAGE_BUCKET = 'productos';
+        const STORAGE_FOLDER = '';
 
         /* ---------- Auth ---------- */
 
@@ -484,7 +520,7 @@
             document.getElementById('loginView').style.display = 'none';
             document.getElementById('adminView').style.display = 'block';
 
-            await Promise.all([cargarRubros(), cargarTamanios()]);
+            await Promise.all([cargarRubros(), cargarTamanios(), cargarImagenesStorage()]);
             await cargarProductos();
         }
 
@@ -662,7 +698,6 @@
                 <div class="producto-row">
                     <div class="producto-header" onclick="toggleProducto(${producto.id})">
                         <span>
-                            ${producto.icono || ''}
                             <strong>${escapeHtml(producto.nombre)}</strong>
                             — ${escapeHtml(producto.rubro ? producto.rubro.nombre : 'Sin rubro')}
                         </span>
@@ -673,12 +708,22 @@
 
                     <div class="producto-body" id="producto-body-${producto.id}">
                         <div class="form-row" style="margin-bottom:14px">
+                            <button class="btn btn-sm btn-secondary" onclick="editarProducto(${producto.id})">
+                                Modificar producto
+                            </button>
                             <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('productos', ${producto.id}, ${!producto.bcondicion})">
                                 ${producto.bcondicion ? 'Dar de baja producto' : 'Reactivar producto'}
                             </button>
                         </div>
 
+                        <div class="product-image-preview">
+                            ${producto.imagen_url
+                                ? `<img src="${escapeHtml(producto.imagen_url)}" alt="${escapeHtml(producto.nombre)}">`
+                                : '<span>Sin imagen</span>'}
+                        </div>
+
                         <p><strong>Estado:</strong> ${escapeHtml(producto.estado)}</p>
+                        <p><strong>Orden:</strong> ${producto.orden}</p>
                         <p><strong>Descripción:</strong> ${escapeHtml(producto.descripcion || '—')}</p>
 
                         <h4 style="color:var(--brown)">Precios / variantes</h4>
@@ -705,8 +750,8 @@
                                             </span>
                                         </td>
                                         <td class="actions-cell">
-                                            <button class="btn btn-sm btn-secondary" onclick="editarStock(${precio.id}, ${precio.stock === null ? 'null' : precio.stock})">
-                                                Ajustar stock
+                                            <button class="btn btn-sm btn-secondary" onclick="editarVariante(${precio.id}, ${precio.tamanio ? precio.tamanio.id : 'null'}, ${precio.precio}, ${precio.stock === null ? 'null' : precio.stock})">
+                                                Modificar
                                             </button>
                                             <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('producto_precios', ${precio.id}, ${!precio.bcondicion})">
                                                 ${precio.bcondicion ? 'Baja' : 'Reactivar'}
@@ -751,7 +796,7 @@
         async function crearProducto() {
             const nombre = document.getElementById('productoNombre').value.trim();
             const rubro_id = document.getElementById('productoRubro').value;
-            const icono = document.getElementById('productoIcono').value.trim() || '🍽️';
+            const imagen_url = document.getElementById('productoImagen').value || null;
             const estado = document.getElementById('productoEstado').value;
             const orden = Number(document.getElementById('productoOrden').value) || 0;
             const descripcion = document.getElementById('productoDescripcion').value.trim();
@@ -762,7 +807,7 @@
             }
 
             const { error } = await supabaseClient.from('productos').insert({
-                nombre, rubro_id, icono, estado, orden, descripcion
+                nombre, rubro_id, imagen_url, estado, orden, descripcion
             });
 
             if (error) {
@@ -773,8 +818,72 @@
             document.getElementById('productoNombre').value = '';
             document.getElementById('productoDescripcion').value = '';
             document.getElementById('productoOrden').value = '0';
+            document.getElementById('productoImagen').value = '';
 
             await cargarProductos();
+        }
+
+        async function editarProducto(productoId) {
+            const { data: producto, error } = await supabaseClient
+                .from('productos')
+                .select('id, nombre, rubro_id, estado, orden, descripcion, imagen_url')
+                .eq('id', productoId)
+                .single();
+
+            if (error || !producto) {
+                alert('No se pudo cargar el producto para modificar.');
+                return;
+            }
+
+            const nombre = prompt('Nombre:', producto.nombre);
+            if (nombre === null) return;
+
+            const rubroActual = rubrosCache.find(r => String(r.id) === String(producto.rubro_id));
+            const rubroNombre = prompt('Rubro actual: ' + (rubroActual ? rubroActual.nombre : 'Sin rubro') + '\nIngresá el ID del nuevo rubro o dejá el actual:', producto.rubro_id);
+            if (rubroNombre === null) return;
+
+            const rubro_id = Number(rubroNombre);
+            if (!rubro_id || !rubrosCache.some(r => Number(r.id) === rubro_id && r.bcondicion)) {
+                alert('El ID de rubro no es válido.');
+                return;
+            }
+
+            const estado = prompt('Estado (disponible, consultar, pendiente, sin_stock):', producto.estado);
+            if (estado === null) return;
+
+            const ordenRaw = prompt('Orden:', producto.orden);
+            if (ordenRaw === null) return;
+            const orden = Number(ordenRaw);
+            if (!Number.isFinite(orden)) {
+                alert('El orden debe ser numérico.');
+                return;
+            }
+
+            const descripcion = prompt('Descripción:', producto.descripcion || '');
+            if (descripcion === null) return;
+
+            const imagen_url = prompt('URL/ruta de la imagen (vacío = sin imagen):', producto.imagen_url || '');
+            if (imagen_url === null) return;
+
+            const { error: updateError } = await supabaseClient
+                .from('productos')
+                .update({
+                    nombre: nombre.trim(),
+                    rubro_id,
+                    estado: estado.trim(),
+                    orden,
+                    descripcion: descripcion.trim(),
+                    imagen_url: imagen_url.trim() || null
+                })
+                .eq('id', productoId);
+
+            if (updateError) {
+                alert('No se pudo modificar el producto: ' + updateError.message);
+                return;
+            }
+
+            await cargarProductos();
+            document.getElementById('producto-body-' + productoId)?.classList.add('open');
         }
 
         async function agregarVariante(productoId) {
@@ -804,30 +913,68 @@
             document.getElementById('producto-body-' + productoId)?.classList.add('open');
         }
 
-        async function editarStock(precioId, stockActual) {
-            const input = prompt(
-                'Nuevo stock (dejar vacío para "sin control"):',
-                stockActual === null ? '' : stockActual
-            );
+        async function editarVariante(precioId, tamanioActual, precioActual, stockActual) {
+            const precioRaw = prompt('Precio:', precioActual);
+            if (precioRaw === null) return;
+            const precio = Number(precioRaw);
+            if (!Number.isFinite(precio) || precio <= 0) {
+                alert('Ingresá un precio válido.');
+                return;
+            }
 
-            if (input === null) return; // canceló
+            const stockRaw = prompt('Stock (vacío = sin control):', stockActual === null ? '' : stockActual);
+            if (stockRaw === null) return;
+            const stock = stockRaw.trim() === '' ? null : Number(stockRaw);
+            if (stock !== null && (!Number.isFinite(stock) || stock < 0)) {
+                alert('Ingresá un stock válido.');
+                return;
+            }
 
-            const stock = input.trim() === '' ? null : Number(input);
+            const tamanioRaw = prompt('ID del tamaño (vacío = Único):', tamanioActual === null ? '' : tamanioActual);
+            if (tamanioRaw === null) return;
+            const tamanio_id = tamanioRaw.trim() === '' ? null : Number(tamanioRaw);
+            if (tamanio_id !== null && !tamaniosCache.some(t => Number(t.id) === tamanio_id && t.bcondicion)) {
+                alert('El ID de tamaño no es válido.');
+                return;
+            }
 
             const { error } = await supabaseClient
                 .from('producto_precios')
-                .update({ stock })
+                .update({ precio, stock, tamanio_id })
                 .eq('id', precioId);
 
             if (error) {
-                alert('No se pudo actualizar el stock: ' + error.message);
+                alert('No se pudo actualizar la variante: ' + error.message);
                 return;
             }
 
             await cargarProductos();
         }
 
-        /* ---------- Alta/baja genérica ---------- */
+        async function cargarImagenesStorage() {
+            const { data, error } = await supabaseClient.storage
+                .from(STORAGE_BUCKET)
+                .list(STORAGE_FOLDER, { limit: 100, sortBy: { column: 'name', order: 'asc' } });
+
+            if (error) {
+                console.warn('No se pudieron cargar imágenes desde Storage:', error.message);
+                return;
+            }
+
+            imagenesCache = (data || []).filter(item => item.name && !item.id?.endsWith('/'));
+            const select = document.getElementById('productoImagen');
+            if (!select) return;
+
+            select.innerHTML = '<option value="">Sin imagen</option>' + imagenesCache.map(item => {
+                const path = STORAGE_FOLDER ? STORAGE_FOLDER + '/' + item.name : item.name;
+                const { data: publicData } = supabaseClient.storage
+                    .from(STORAGE_BUCKET)
+                    .getPublicUrl(path);
+                return `<option value="${escapeHtml(publicData.publicUrl)}">${escapeHtml(item.name)}</option>`;
+            }).join('');
+        }
+
+                /* ---------- Alta/baja genérica ---------- */
 
         async function toggleCondicion(tabla, id, nuevoValor) {
             const { error } = await supabaseClient
