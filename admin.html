@@ -322,9 +322,74 @@
             color: #88654c;
             font-size: 11px;
         }
+
+        /* ============================
+        MODAL EDICIÓN
+        ============================ */
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 9999;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-content {
+            width: 700px;
+            max-width: 95%;
+            margin: 40px auto;
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        }
+
+        .modal-header {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+        }
+
+        .modal-header h3{
+            margin:0;
+            color:var(--brown);
+        }
+
+        .modal-close{
+            border:none;
+            background:none;
+            font-size:24px;
+            cursor:pointer;
+        }
+
     </style>
 </head>
+<div id="editModal" class="modal">
 
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <h3 id="editModalTitle">Editar</h3>
+
+            <button
+                class="modal-close"
+                onclick="cerrarModal()">
+                ×
+            </button>
+        </div>
+
+        <div id="modalBody"></div>
+
+    </div>
+
+</div>
 <body>
     <div id="loginView" class="login-box">
         <h2>Ingreso administrador</h2>
@@ -485,6 +550,8 @@
         let rubrosCache = [];
         let tamaniosCache = [];
         let imagenesCache = [];
+        let editType = null;
+        let editId = null;
 
         // Cambiar solamente si tu bucket/carpeta tienen otros nombres.
         const STORAGE_BUCKET = 'productos';
@@ -523,6 +590,28 @@
             await Promise.all([cargarRubros(), cargarTamanios(), cargarImagenesStorage()]);
             await cargarProductos();
         }
+
+        function abrirModal(titulo, html){
+
+            document.getElementById('editModalTitle').textContent = titulo;
+
+            document.getElementById('modalBody').innerHTML = html;
+
+            document.getElementById('editModal')
+                .classList.add('show');
+        }
+
+        function cerrarModal(){
+
+            document.getElementById('editModal')
+                .classList.remove('show');
+
+            document.getElementById('modalBody').innerHTML = '';
+
+            editType = null;
+            editId = null;
+        }
+
 
         async function checkSesionInicial() {
             const { data } = await supabaseClient.auth.getSession();
@@ -573,10 +662,11 @@
                         </span>
                     </td>
                     <td class="actions-cell">
-                        <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('rubros', ${rubro.id}, ${!rubro.bcondicion})">
-                            ${rubro.bcondicion ? 'Dar de baja' : 'Reactivar'}
+                        <button
+                            class="btn btn-sm"
+                            onclick="editarRubro(${rubro.id})">
+                            ✏️ Editar
                         </button>
-                    </td>
                 </tr>
             `).join('') || '<tr><td colspan="4" class="load-msg">No hay rubros cargados.</td></tr>';
         }
@@ -588,6 +678,73 @@
                 .map(rubro => `<option value="${rubro.id}">${escapeHtml(rubro.nombre)}</option>`)
                 .join('');
         }
+
+        function editarRubro(id){
+
+        const rubro = rubrosCache.find(r => r.id == id);
+
+        editType = 'rubro';
+        editId = id;
+
+        abrirModal('Editar Rubro', `
+
+            <div class="field">
+                <label>Nombre</label>
+                <input
+                    id="editNombre"
+                    value="${escapeHtml(rubro.nombre)}">
+            </div>
+
+            <div class="field">
+                <label>Orden</label>
+                <input
+                    type="number"
+                    id="editOrden"
+                    value="${rubro.orden}">
+            </div>
+
+            <button class="btn"
+                onclick="guardarRubro()">
+                Guardar
+            </button>
+
+        `);
+    }
+
+
+        async function guardarRubro(){
+
+            const nombre =
+                document.getElementById('editNombre')
+                .value.trim();
+
+            const orden =
+                Number(
+                    document.getElementById('editOrden')
+                    .value
+                );
+
+            const { error } = await supabaseClient
+                .from('rubros')
+                .update({
+                    nombre,
+                    orden
+                })
+                .eq('id', editId);
+
+            if(error){
+                alert(error.message);
+                return;
+            }
+
+            cerrarModal();
+
+            await cargarRubros();
+        }
+
+
+
+
 
         async function crearRubro() {
             const nombre = document.getElementById('rubroNombre').value.trim();
@@ -625,7 +782,15 @@
 
             tamaniosCache = data;
             renderTablaTamanios();
+
+            <button
+            class="btn btn-sm"
+            onclick="editarTamanio(${tamanio.id})">
+            ✏️ Editar
+            </button>
         }
+
+        
 
         function renderTablaTamanios() {
             document.getElementById('tablaTamanios').innerHTML = tamaniosCache.map(tamanio => `
@@ -644,6 +809,59 @@
                 </tr>
             `).join('') || '<tr><td colspan="3" class="load-msg">No hay tamaños cargados.</td></tr>';
         }
+
+
+        function editarTamanio(id){
+
+            const tamanio =
+                tamaniosCache.find(t => t.id == id);
+
+            editType = 'tamanio';
+            editId = id;
+
+            abrirModal('Editar Tamaño',`
+
+                <div class="field">
+                    <label>Nombre</label>
+
+                    <input
+                        id="editNombre"
+                        value="${escapeHtml(tamanio.nombre)}">
+                </div>
+
+                <button
+                    class="btn"
+                    onclick="guardarTamanio()">
+                    Guardar
+                </button>
+            `);
+        }
+
+
+        async function guardarTamanio(){
+
+            const nombre =
+                document.getElementById('editNombre')
+                .value.trim();
+
+            const { error } =
+                await supabaseClient
+                .from('tamanios')
+                .update({
+                    nombre
+                })
+                .eq('id', editId);
+
+            if(error){
+                alert(error.message);
+                return;
+            }
+
+            cerrarModal();
+
+            await cargarTamanios();
+        }
+
 
         async function crearTamanio() {
             const nombre = document.getElementById('tamanioNombre').value.trim();
@@ -787,6 +1005,165 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        async function editarProducto(productoId){
+
+            const { data: producto, error } =
+                await supabaseClient
+                .from('productos')
+                .select('*')
+                .eq('id', productoId)
+                .single();
+
+            if(error){
+                alert(error.message);
+                return;
+            }
+
+            editType = 'producto';
+            editId = productoId;
+
+            abrirModal('Editar Producto',`
+
+                <div class="field">
+                    <label>Nombre</label>
+
+                    <input
+                        id="editNombre"
+                        value="${escapeHtml(producto.nombre)}">
+                </div>
+
+                <div class="field">
+                    <label>Rubro</label>
+
+                    <select id="editRubro">
+
+                        ${rubrosCache
+                            .filter(r=>r.bcondicion)
+                            .map(r=>`
+
+                            <option
+                                value="${r.id}"
+                                ${r.id==producto.rubro_id ? 'selected':''}>
+                                ${escapeHtml(r.nombre)}
+                            </option>
+
+                            `).join('')}
+
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Estado</label>
+
+                    <select id="editEstado">
+
+                        <option value="disponible"
+                            ${producto.estado=='disponible'?'selected':''}>
+                            Disponible
+                        </option>
+
+                        <option value="consultar"
+                            ${producto.estado=='consultar'?'selected':''}>
+                            Consultar
+                        </option>
+
+                        <option value="pendiente"
+                            ${producto.estado=='pendiente'?'selected':''}>
+                            Pendiente
+                        </option>
+
+                        <option value="sin_stock"
+                            ${producto.estado=='sin_stock'?'selected':''}>
+                            Sin Stock
+                        </option>
+
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Orden</label>
+
+                    <input
+                        type="number"
+                        id="editOrden"
+                        value="${producto.orden}">
+                </div>
+
+                <div class="field">
+                    <label>Descripción</label>
+
+                    <textarea id="editDescripcion">${escapeHtml(producto.descripcion || '')}</textarea>
+                </div>
+
+                <div class="field">
+                    <label>Imagen</label>
+
+                    <input
+                        id="editImagen"
+                        value="${escapeHtml(producto.imagen_url || '')}">
+                </div>
+
+                <button
+                    class="btn"
+                    onclick="guardarProducto()">
+                    Guardar cambios
+                </button>
+
+            `);
+        }
+
+
+        async function guardarProducto(){
+
+            const nombre =
+                document.getElementById('editNombre')
+                .value.trim();
+
+            const rubro_id =
+                document.getElementById('editRubro')
+                .value;
+
+            const estado =
+                document.getElementById('editEstado')
+                .value;
+
+            const orden =
+                Number(
+                    document.getElementById('editOrden')
+                    .value
+                );
+
+            const descripcion =
+                document.getElementById('editDescripcion')
+                .value.trim();
+
+            const imagen_url =
+                document.getElementById('editImagen')
+                .value.trim();
+
+            const { error } =
+                await supabaseClient
+                .from('productos')
+                .update({
+                    nombre,
+                    rubro_id,
+                    estado,
+                    orden,
+                    descripcion,
+                    imagen_url
+                })
+                .eq('id', editId);
+
+            if(error){
+                alert(error.message);
+                return;
+            }
+
+            cerrarModal();
+
+            await cargarProductos();
         }
 
         function toggleProducto(id) {
