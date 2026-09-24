@@ -1049,6 +1049,14 @@
             `;
         }
 
+        const carpetasImagenesPorRubro = {
+            'Café': 'cafe',
+            'Pasteleria y Laminados': 'laminados',
+            'Salados': 'salados',
+            'Cookies': 'cookies',
+            'Adicionales': 'adicionales',
+            'Infusiones': 'infusiones'
+        };
 
         function getImagenProducto(producto) {
             const archivo = (producto.imagen_archivo || '').trim();
