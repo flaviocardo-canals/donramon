@@ -805,10 +805,20 @@
                             ${tamanio.bcondicion ? 'Activo' : 'Inactivo'}
                         </span>
                     </td>
-                    <td class="actions-cell">
-                        <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('tamanios', ${tamanio.id}, ${!tamanio.bcondicion})">
+                   <td class="actions-cell">
+
+                        <button
+                            class="btn btn-sm"
+                            onclick="editarTamanio(${tamanio.id})">
+                            ✏️ Editar
+                        </button>
+
+                        <button
+                            class="btn btn-sm btn-secondary"
+                            onclick="toggleCondicion('tamanios', ${tamanio.id}, ${!tamanio.bcondicion})">
                             ${tamanio.bcondicion ? 'Dar de baja' : 'Reactivar'}
                         </button>
+
                     </td>
                 </tr>
             `).join('') || '<tr><td colspan="3" class="load-msg">No hay tamaños cargados.</td></tr>';
@@ -820,10 +830,9 @@
             const tamanio =
                 tamaniosCache.find(t => t.id == id);
 
-            editType = 'tamanio';
             editId = id;
 
-            abrirModal('Editar Tamaño',`
+            abrirModal('Editar Tamaño', `
 
                 <div class="field">
                     <label>Nombre</label>
@@ -838,6 +847,7 @@
                     onclick="guardarTamanio()">
                     Guardar
                 </button>
+
             `);
         }
 
