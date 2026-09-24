@@ -943,12 +943,21 @@
                             </button>
                         </div>
 
-                        <div class="product-image-preview">
-                            ${getImagenProducto(producto)
-                                ? `<img
-                                        src="${getImagenProducto(producto)}
-                                : '<span>Sin imagen</span>'}
-                        </div>
+                        ${(() => {
+
+                            const imagen = getImagenProducto(producto);
+
+                            return `
+                                <div class="product-image-preview">
+                                    ${
+                                        imagen
+                                            ? `<img src="$`
+                                            : '<span>Sin imagen</span>'
+                                    }
+                                </div>
+                            `;
+
+                        })()}
 
                         <p><strong>Estado:</strong> ${escapeHtml(producto.estado)}</p>
                         <p><strong>Orden:</strong> ${producto.orden}</p>
@@ -962,7 +971,6 @@
                                     <th>Tamaño</th>
                                     <th>Precio</th>
                                     <th>Stock</th>
-                                    <th>Imagen</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -980,12 +988,7 @@
                                         </td>
                                         <td class="actions-cell">
                                            
-                                            <button
-                                                class="btn btn-sm btn-secondary"
-                                                onclick="editarProducto(${producto.id})">
-                                                Modificar producto
-                                            </button>
-
+                                           
                                             <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('producto_precios', ${precio.id}, ${!precio.bcondicion})">
                                                 ${precio.bcondicion ? 'Baja' : 'Reactivar'}
                                             </button>
