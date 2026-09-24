@@ -1050,12 +1050,12 @@
         }
 
         const carpetasImagenesPorRubro = {
-            'Café': 'cafe',
-            'Pasteleria y Laminados': 'laminados',
-            'Salados': 'salados',
-            'Cookies': 'cookies',
-            'Adicionales': 'adicionales',
-            'Infusiones': 'infusiones'
+            'Café': 'fotos/cafe',
+            'Pasteleria y Laminados': 'fotos/laminados',
+            'Salados': 'fotos/salados',
+            'Cookies': 'fotos/cookies',
+            'Adicionales': 'fotos/adicionales',
+            'Infusiones': 'fotos/infusiones'
         };
 
         function getImagenProducto(producto) {
@@ -1080,7 +1080,7 @@
                 return null;
             }
 
-            const ruta = `fotos/${carpeta}/${archivo}`;
+            const ruta = `${carpeta}/${archivo}`;
 
             const { data } = supabaseClient.storage
                 .from('productos')
