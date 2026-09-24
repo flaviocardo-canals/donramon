@@ -920,21 +920,7 @@
                 return;
             }
 
-            ${(() => {
-
-                const imagen = getImagenProducto(producto);
-
-                return `
-                    <div class="product-image-preview">
-                        ${
-                            imagen
-                                ? `<img src="$`
-                                : '<span>Sin imagen</span>'
-                        }
-                    </div>
-                `;
-
-            })()}
+            
 
             
             contenedor.innerHTML = productos.map(producto => `
@@ -960,7 +946,21 @@
                             </button>
                         </div>
 
-                        
+                        ${(() => {
+
+                        const imagen = getImagenProducto(producto);
+
+                        return `
+                            <div class="product-image-preview">
+                                ${
+                                    imagen
+                                        ? `<img src="$`
+                                        : '<span>Sin imagen</span>'
+                                }
+                            </div>
+                        `;
+
+                    })()}
 
                         <p><strong>Estado:</strong> ${escapeHtml(producto.estado)}</p>
                         <p><strong>Orden:</strong> ${producto.orden}</p>
