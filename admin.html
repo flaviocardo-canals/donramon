@@ -296,23 +296,23 @@
         }
 
         .product-image-preview {
-            width: 120px;
-            min-height: 90px;
-            margin: 0 0 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--cream);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: grid;
+            width: 180px;
+            height: 130px;
+            margin: 0 0 16px;
+            place-items: center;
             overflow: hidden;
-            color: #88654c;
+            border: 1px solid #dfc7ad;
+            border-radius: 12px;
+            background: #fbf5ee;
+            color: #765b47;
             font-size: 12px;
         }
 
         .product-image-preview img {
+            display: block;
             width: 100%;
-            height: 90px;
+            height: 100%;
             object-fit: cover;
         }
 
@@ -1030,8 +1030,9 @@
 
                                 <input
                                     type="text"
-                                    id="productoImagenArchivo"
-                                    placeholder="latte.jpeg">
+                                    id="productoImagenArchivo-${producto.id}"
+                                    placeholder="latte.jpeg"
+                                    value="${escapeHtml(producto.imagen_archivo || '')}">
                             </div>
                             <button class="btn btn-sm" onclick="agregarVariante(${producto.id})">
                                 Agregar variante
