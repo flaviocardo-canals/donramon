@@ -661,13 +661,23 @@
                             ${rubro.bcondicion ? 'Activo' : 'Inactivo'}
                         </span>
                     </td>
-                    <td class="actions-cell">
+                   <td class="actions-cell">
+
                         <button
                             class="btn btn-sm"
                             onclick="editarRubro(${rubro.id})">
                             ✏️ Editar
                         </button>
+
+                        <button
+                            class="btn btn-sm btn-secondary"
+                            onclick="toggleCondicion('rubros', ${rubro.id}, ${!rubro.bcondicion})">
+                            ${rubro.bcondicion ? 'Dar de baja' : 'Reactivar'}
+                        </button>
+
+                    </td>
                 </tr>
+                
             `).join('') || '<tr><td colspan="4" class="load-msg">No hay rubros cargados.</td></tr>';
         }
 
@@ -782,12 +792,6 @@
 
             tamaniosCache = data;
             renderTablaTamanios();
-
-            <button
-            class="btn btn-sm"
-            onclick="editarTamanio(${tamanio.id})">
-            ✏️ Editar
-            </button>
         }
 
         
@@ -1007,113 +1011,7 @@
             `).join('');
         }
 
-        async function editarProducto(productoId){
-
-            const { data: producto, error } =
-                await supabaseClient
-                .from('productos')
-                .select('*')
-                .eq('id', productoId)
-                .single();
-
-            if(error){
-                alert(error.message);
-                return;
-            }
-
-            editType = 'producto';
-            editId = productoId;
-
-            abrirModal('Editar Producto',`
-
-                <div class="field">
-                    <label>Nombre</label>
-
-                    <input
-                        id="editNombre"
-                        value="${escapeHtml(producto.nombre)}">
-                </div>
-
-                <div class="field">
-                    <label>Rubro</label>
-
-                    <select id="editRubro">
-
-                        ${rubrosCache
-                            .filter(r=>r.bcondicion)
-                            .map(r=>`
-
-                            <option
-                                value="${r.id}"
-                                ${r.id==producto.rubro_id ? 'selected':''}>
-                                ${escapeHtml(r.nombre)}
-                            </option>
-
-                            `).join('')}
-
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Estado</label>
-
-                    <select id="editEstado">
-
-                        <option value="disponible"
-                            ${producto.estado=='disponible'?'selected':''}>
-                            Disponible
-                        </option>
-
-                        <option value="consultar"
-                            ${producto.estado=='consultar'?'selected':''}>
-                            Consultar
-                        </option>
-
-                        <option value="pendiente"
-                            ${producto.estado=='pendiente'?'selected':''}>
-                            Pendiente
-                        </option>
-
-                        <option value="sin_stock"
-                            ${producto.estado=='sin_stock'?'selected':''}>
-                            Sin Stock
-                        </option>
-
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Orden</label>
-
-                    <input
-                        type="number"
-                        id="editOrden"
-                        value="${producto.orden}">
-                </div>
-
-                <div class="field">
-                    <label>Descripción</label>
-
-                    <textarea id="editDescripcion">${escapeHtml(producto.descripcion || '')}</textarea>
-                </div>
-
-                <div class="field">
-                    <label>Imagen</label>
-
-                    <input
-                        id="editImagen"
-                        value="${escapeHtml(producto.imagen_url || '')}">
-                </div>
-
-                <button
-                    class="btn"
-                    onclick="guardarProducto()">
-                    Guardar cambios
-                </button>
-
-            `);
-        }
-
+        
 
         async function guardarProducto(){
 
@@ -1377,7 +1275,7 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+                .replace(/'/g, '&#39;');
         }
 
         checkSesionInicial();
