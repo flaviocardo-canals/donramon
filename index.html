@@ -1192,18 +1192,6 @@
             <button class="quick-filter" data-filter="available" onclick="selectQuickFilter('available', this)">
                 Disponible hoy
             </button>
-
-            <button class="quick-filter" data-filter="coffee" onclick="selectQuickFilter('coffee', this)">
-                Cafés
-            </button>
-
-            <button class="quick-filter" data-filter="sweet" onclick="selectQuickFilter('sweet', this)">
-                Algo dulce
-            </button>
-
-            <button class="quick-filter" data-filter="salty" onclick="selectQuickFilter('salty', this)">
-                Salados
-            </button>
         </div>
 
         <nav class="tabs" id="tabs" aria-label="Categorías de productos"></nav>
@@ -1255,6 +1243,8 @@
         </div>
 
         <div id="items"></div>
+
+        <div class="promo-hint" id="promoHint" style="display:none"></div>
 
         <div class="customer-field">
             <label for="customerName">
@@ -1331,6 +1321,12 @@
         // (variante = '' cuando el producto tiene precio único, sin tamaños)
         let variantMeta = new Map();
 
+        // rubroOrderMap: mapa "nombreRubro" -> orden (para ordenar las solapas de categorías)
+        let rubroOrderMap = new Map();
+
+        // promosVigentes: promociones activas hoy, con sus productos requeridos
+        let promosVigentes = [];
+
         let cat = 'Todas';
         let quickFilter = 'all';
         let order = loadCurrentOrder();
@@ -1358,6 +1354,10 @@
                 const key = `${producto.nombre}::${variantName}`;
                 variantMeta.set(key, { precioId: p.id, stock: p.stock });
             });
+
+            if (producto.rubro) {
+                rubroOrderMap.set(producto.rubro.nombre, producto.rubro.orden ?? 999);
+            }
 
             const variantNames = preciosActivos.map(p => p.tamanio ? p.tamanio.nombre : 'Único');
             const variantPrices = preciosActivos.map(p => p.precio);
@@ -1413,9 +1413,41 @@
                 .map(buildMenuRow);
         }
 
+        async function fetchPromocionesFromSupabase() {
+            const { data, error } = await supabaseClient
+                .from('promociones')
+                .select(`
+                    id, nombre, descripcion, precio, bcondicion, fecha_desde, fecha_hasta,
+                    items:promocion_items (
+                        id, cantidad,
+                        producto_precio: producto_precios ( id, precio )
+                    )
+                `)
+                .eq('bcondicion', true);
+
+            if (error) {
+                console.error('No se pudieron cargar las promociones:', error.message);
+                return [];
+            }
+
+            const hoy = new Date().toISOString().slice(0, 10);
+
+            return data.filter(promo => {
+                if (!promo.items || promo.items.length === 0) return false;
+                if (promo.fecha_desde && hoy < promo.fecha_desde) return false;
+                if (promo.fecha_hasta && hoy > promo.fecha_hasta) return false;
+                return true;
+            });
+        }
+
         async function refreshMenu() {
             variantMeta = new Map();
-            items = await fetchMenuFromSupabase();
+            rubroOrderMap = new Map();
+
+            [items, promosVigentes] = await Promise.all([
+                fetchMenuFromSupabase(),
+                fetchPromocionesFromSupabase()
+            ]);
         }
 
         /* ---------- Persistencia (localStorage) ---------- */
@@ -1510,23 +1542,8 @@
         }
 
         function matchesQuickFilter(item) {
-            const category = item[1];
-            const status = item[5];
-
             if (quickFilter === 'available') {
-                return status === 'Disponible';
-            }
-
-            if (quickFilter === 'coffee') {
-                return category === 'Café';
-            }
-
-            if (quickFilter === 'sweet') {
-                return category === 'Pastelería y laminados' || category === 'Infusiones';
-            }
-
-            if (quickFilter === 'salty') {
-                return category === 'Salados';
+                return item[5] === 'Disponible';
             }
 
             return true;
@@ -1587,6 +1604,58 @@
             syncCardControls();
 
             return { ok: true };
+        }
+
+        /* ---------- Promociones ---------- */
+
+        function calcularAplicacionesPromo(promo) {
+            if (!promo.items || promo.items.length === 0) return 0;
+
+            const veces = promo.items.map(item => {
+                const enCarrito = order
+                    .filter(entry => entry.precioId === item.producto_precio.id)
+                    .reduce((sum, entry) => sum + entry.quantity, 0);
+
+                return Math.floor(enCarrito / item.cantidad);
+            });
+
+            return Math.min(...veces);
+        }
+
+        function calcularTotalConPromos() {
+            const totalIndividual = order.reduce((sum, entry) => sum + entry.price * entry.quantity, 0);
+
+            let ahorroTotal = 0;
+            const promosAplicadas = [];
+
+            promosVigentes.forEach(promo => {
+                const veces = calcularAplicacionesPromo(promo);
+                if (veces <= 0) return;
+
+                const precioSumaIndividual = promo.items.reduce(
+                    (sum, item) => sum + (item.producto_precio.precio * item.cantidad),
+                    0
+                );
+
+                const ahorroPorAplicacion = precioSumaIndividual - promo.precio;
+
+                if (ahorroPorAplicacion > 0) {
+                    ahorroTotal += ahorroPorAplicacion * veces;
+                    promosAplicadas.push({
+                        nombre: promo.nombre,
+                        veces,
+                        precioCombo: promo.precio,
+                        ahorro: ahorroPorAplicacion * veces
+                    });
+                }
+            });
+
+            return {
+                totalIndividual,
+                totalConPromos: totalIndividual - ahorroTotal,
+                ahorroTotal,
+                promosAplicadas
+            };
         }
 
         /* ---------- Controles de cantidad en la card ---------- */
@@ -1673,8 +1742,16 @@
                 filteredItems.map(item => {
                     const index = items.indexOf(item);
                     const remainingStock = getRemainingStock(item[0], null);
-                    const isOutOfStock = item[5] === 'SIN STOCK' || (getVariants(item).length === 0 && remainingStock === 0);
                     const variants = getVariants(item);
+
+                    // No se puede pedir: sin stock (texto o numérico) o "pendiente"
+                    // (a diferencia de "Consultar", que sí se puede pedir sujeto a confirmación).
+                    const agotadoPorStock = variants.length === 0 && remainingStock === 0;
+                    const isOutOfStock = item[5] === 'SIN STOCK' || item[5] === 'PENDIENTE' || agotadoPorStock;
+
+                    // Para el badge visual: "PENDIENTE" mantiene su propio color/etiqueta,
+                    // solo se fuerza a "SIN STOCK" cuando es literalmente eso.
+                    const mostrarComoSinStock = item[5] === 'SIN STOCK' || agotadoPorStock;
 
                     const priceText = item[3].includes('/')
                         ? '$' + item[3]
@@ -1693,9 +1770,9 @@
                                 <p class="desc">${escapeHtml(item[4])}</p>
                                 <div class="price">${priceText}</div>
 
-                                <div class="status ${isOutOfStock ? 'status-sin-stock' : getStatusClass(item[5])}">
+                                <div class="status ${mostrarComoSinStock ? 'status-sin-stock' : getStatusClass(item[5])}">
                                     <span class="status-dot"></span>
-                                    ${isOutOfStock && item[5] !== 'SIN STOCK' ? 'SIN STOCK' : escapeHtml(item[5])}
+                                    ${mostrarComoSinStock && item[5] !== 'SIN STOCK' ? 'SIN STOCK' : escapeHtml(item[5])}
                                 </div>
 
                                 ${!isOutOfStock && variants.length === 0 && remainingStock !== null
@@ -1761,7 +1838,7 @@
                                         id="add-btn-${index}"
                                         onclick="startAdd(${index})"
                                     >
-                                        ${isOutOfStock ? 'Sin stock' : 'Elegir opción'}
+                                        ${isOutOfStock ? 'No disponible' : 'Elegir opción'}
                                     </button>
                                 `
                             }
@@ -1964,16 +2041,24 @@
                 `).join('')
                 || '<p>Tu pedido está vacío.</p>';
 
-            const total = order.reduce(
-                (sum, item) => sum + (item.price * item.quantity),
-                0
-            );
+            const { totalConPromos, ahorroTotal, promosAplicadas } = calcularTotalConPromos();
 
-            document.getElementById('total').textContent = money(total);
-            document.getElementById('totalMini').textContent = money(total);
+            document.getElementById('total').textContent = money(totalConPromos);
+            document.getElementById('totalMini').textContent = money(totalConPromos);
             document.getElementById('countMini').textContent = totalProducts;
             document.getElementById('fabCount').textContent = totalProducts;
-            document.getElementById('fabTotal').textContent = money(total);
+            document.getElementById('fabTotal').textContent = money(totalConPromos);
+
+            const promoHint = document.getElementById('promoHint');
+
+            if (promosAplicadas.length > 0) {
+                promoHint.innerHTML = '🎉 ' +
+                    promosAplicadas.map(p => `${escapeHtml(p.nombre)} x${p.veces}`).join(' · ') +
+                    ` — ahorrás $${money(ahorroTotal)}`;
+                promoHint.style.display = 'block';
+            } else {
+                promoHint.style.display = 'none';
+            }
 
             saveCurrentOrder();
         }
@@ -2019,6 +2104,7 @@
                 refreshMenu().then(() => {
                     render();
                     syncCardControls();
+                    update();
                 });
             }
         }
@@ -2128,6 +2214,27 @@
             }).join('\n');
         }
 
+        function getResumenPedido() {
+            const itemsTexto = getOrderSummary();
+            const { totalIndividual, totalConPromos, ahorroTotal, promosAplicadas } = calcularTotalConPromos();
+
+            let resumen = `Pedido:\n${itemsTexto}`;
+
+            if (promosAplicadas.length > 0) {
+                resumen += `\n\n🎉 Promociones aplicadas:\n`;
+                resumen += promosAplicadas
+                    .map(p => `• ${p.nombre} x${p.veces} — $${money(p.precioCombo)} c/u (ahorrás $${money(p.ahorro)})`)
+                    .join('\n');
+                resumen += `\n\nSubtotal: $${money(totalIndividual)}`;
+                resumen += `\nDescuento por promoción: -$${money(ahorroTotal)}`;
+                resumen += `\nTotal a pagar: $${money(totalConPromos)}`;
+            } else {
+                resumen += `\n\nTotal: $${money(totalConPromos)}`;
+            }
+
+            return resumen;
+        }
+
         function copyOrder() {
             if (order.length === 0) {
                 alert('Tu pedido está vacío.');
@@ -2142,13 +2249,10 @@
 
             saveLastOrder();
 
-            const total = document.getElementById('total').textContent;
-
             const text =
                 `Pedido Don Ramón Pâtisserie\n\n` +
                 `Nombre del solicitante: ${customerName}\n\n` +
-                `Pedido:\n${getOrderSummary()}\n\n` +
-                `Total: $${total}`;
+                `${getResumenPedido()}`;
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text)
@@ -2201,13 +2305,11 @@
             saveLastOrder();
 
             const numero = '5491156940434';
-            const total = document.getElementById('total').textContent;
 
             const message =
                 `Hola! Quiero hacer este pedido en Don Ramón Pâtisserie:\n\n` +
                 `Nombre del solicitante: ${customerName}\n\n` +
-                `Pedido:\n${getOrderSummary()}\n\n` +
-                `Total: $${total}\n\n` +
+                `${getResumenPedido()}\n\n` +
                 `Los productos marcados como "a confirmar" quedan sujetos a disponibilidad.`;
 
             const url = `https://wa.me/${numero}?text=${encodeURIComponent(message)}`;
@@ -2226,17 +2328,12 @@
 
             button.classList.add('active');
 
-            if (filter === 'coffee') {
-                cat = 'Café';
-            } else if (filter === 'salty') {
-                cat = 'Salados';
-            } else {
+            if (filter === 'all') {
                 cat = 'Todas';
+                updateCategoryTabs();
             }
 
             document.getElementById('search').value = '';
-
-            updateCategoryTabs();
             render();
         }
 
@@ -2358,7 +2455,10 @@
         async function init() {
             await refreshMenu();
 
-            const categories = ['Todas', ...new Set(items.map(item => item[1]))];
+            const categoriasUnicas = [...new Set(items.map(item => item[1]))];
+            categoriasUnicas.sort((a, b) => (rubroOrderMap.get(a) ?? 999) - (rubroOrderMap.get(b) ?? 999));
+
+            const categories = ['Todas', ...categoriasUnicas];
 
             document.getElementById('tabs').innerHTML = categories
                 .map(category => `
