@@ -498,13 +498,7 @@
                             <label>Rubro</label>
                             <select id="productoRubro"></select>
                         </div>
-                        <div class="field">
-                            <label>Imagen</label>
-                            <select id="productoImagen">
-                                <option value="">Sin imagen</option>
-                            </select>
-                            <small class="image-help">Las imágenes se leen desde Storage. Configurá el bucket y la carpeta en el script.</small>
-                        </div>
+                       
                         <div class="field">
                             <label>Estado</label>
                             <select id="productoEstado">
@@ -1053,9 +1047,7 @@
                 document.getElementById('editDescripcion')
                 .value.trim();
 
-            const imagen_url =
-                document.getElementById('editImagen')
-                .value || null;
+            
 
             const { error } =
                 await supabaseClient
@@ -1065,8 +1057,8 @@
                     rubro_id,
                     estado,
                     orden,
-                    descripcion,
-                    imagen_url
+                    descripcion
+                   
                 })
                 .eq('id', editId);
 
@@ -1087,7 +1079,6 @@
         async function crearProducto() {
             const nombre = document.getElementById('productoNombre').value.trim();
             const rubro_id = document.getElementById('productoRubro').value;
-            const imagen_url = document.getElementById('productoImagen').value || null;
             const estado = document.getElementById('productoEstado').value;
             const orden = Number(document.getElementById('productoOrden').value) || 0;
             const descripcion = document.getElementById('productoDescripcion').value.trim();
@@ -1098,7 +1089,7 @@
             }
 
             const { error } = await supabaseClient.from('productos').insert({
-                nombre, rubro_id, imagen_url, estado, orden, descripcion
+                nombre, rubro_id, estado, orden, descripcion
             });
 
             if (error) {
@@ -1109,8 +1100,7 @@
             document.getElementById('productoNombre').value = '';
             document.getElementById('productoDescripcion').value = '';
             document.getElementById('productoOrden').value = '0';
-            document.getElementById('productoImagen').value = '';
-
+           
             await cargarProductos();
         }
 
@@ -1194,35 +1184,7 @@
                         value="${producto.orden || 0}">
                 </div>
 
-                <div class="field">
-                    <label>Imagen</label>
-
-                    <select id="editImagen">
-
-                        <option value="">Sin imagen</option>
-
-                        ${imagenesCache.map(item => {
-
-                            const path =
-                                STORAGE_FOLDER + '/' + item.name;
-
-                            const { data } =
-                                supabaseClient.storage
-                                .from(STORAGE_BUCKET)
-                                .getPublicUrl(path);
-
-                            return `
-                                <option
-                                    value="${data.publicUrl}"
-                                    ${producto.imagen_url === data.publicUrl ? 'selected' : ''}>
-                                    ${escapeHtml(item.name)}
-                                </option>
-                            `;
-                        }).join('')}
-
-                    </select>
-
-                </div>
+                
 
                 <div class="field">
                     <label>Descripción</label>
