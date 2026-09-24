@@ -946,27 +946,7 @@
                             </button>
                         </div>
 
-                        ${(() => {
-                            const imagen = getImagenProducto(producto);
-
-                            return `
-                                <div class="product-image-preview">
-                                    ${
-                                        imagen
-                                            ? `<img
-                                                src="${escapeHtml(imagen)}"
-                                                alt="${escapeHtml(producto.nombre)}"
-                                                loading="lazy"
-                                                onerror="this.style.display='none'; this.parentElement.querySelector('.image-error').style.display='block';"
-                                            >
-                                            <span class="image-error" style="display:none">
-                                                No se pudo cargar la imagen
-                                            </span>`
-                                            : '<span>Sin imagen</span>'
-                                    }
-                                </div>
-                            `;
-                        })()}
+                         ${renderImagenProducto(producto)}
 
                         <p><strong>Estado:</strong> ${escapeHtml(producto.estado)}</p>
                         <p><strong>Orden:</strong> ${producto.orden}</p>
@@ -1043,29 +1023,77 @@
             `).join('');
         }
 
+        function renderImagenProducto(producto) {
+            const imagen = getImagenProducto(producto);
+
+            if (!imagen) {
+                return `
+                    <div class="product-image-preview">
+                        <span>Sin imagen</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="product-image-preview">
+                    <img
+                        src="${escapeHtml(imagen)}"
+                        alt="${escapeHtml(producto.nombre)}"
+                        loading="lazy"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                    >
+                    <span class="image-error" style="display:none">
+                        No se pudo cargar la imagen
+                    </span>
+                </div>
+            `;
+        }
+
+        const carpetasImagenesPorRubro = {
+            'cafe': 'cafe',
+            'pasteleria-y-laminados': 'laminados',
+            'salados': 'salados',
+            'cookies': 'cookies'
+        };
+
         function getImagenProducto(producto) {
+            const archivo = (producto.imagen_archivo || '').trim();
 
-                if (!producto.imagen_archivo) {
-                    return null;
-                }
+            if (!archivo) {
+                return null;
+            }
 
-                
-                const rubro =
-                    normalizarTexto(
-                        producto.rubro?.nombre || ''
-                    );
+            const rubroNormalizado = normalizarTexto(
+                producto.rubro?.nombre || ''
+            );
 
-                if (!rubro) {
-                    return null;
-                }
+            const carpeta = carpetasImagenesPorRubro[rubroNormalizado];
 
-                const ruta = `fotos/${rubro}/${producto.imagen_archivo}`;
+            if (!carpeta) {
+                console.warn(
+                    'No existe carpeta de imágenes configurada para el rubro:',
+                    producto.rubro?.nombre
+                );
 
-                const { data } = supabaseClient.storage
-                    .from('productos')
-                    .getPublicUrl(ruta);
+                return null;
+            }
 
-                return data.publicUrl;
+            const ruta = `fotos/${carpeta}/${archivo}`;
+
+            const { data } = supabaseClient.storage
+                .from('productos')
+                .getPublicUrl(ruta);
+
+            console.log('Imagen de producto:', {
+                producto: producto.nombre,
+                rubro: producto.rubro?.nombre,
+                carpeta,
+                archivo,
+                ruta,
+                publicUrl: data.publicUrl
+            });
+
+            return data.publicUrl;
         }
 
 
@@ -1383,15 +1411,17 @@
 
         checkSesionInicial();
 
-
-        function normalizarTexto(texto){
-
-            return texto
+   
+        function normalizarTexto(texto) {
+            return String(texto || '')
+                .trim()
+                .toLowerCase()
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
-                .toLowerCase()
-                .trim();
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
         }
+        
     </script>
 </body>
 
