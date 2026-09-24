@@ -947,20 +947,26 @@
                         </div>
 
                         ${(() => {
+                            const imagen = getImagenProducto(producto);
 
-                        const imagen = getImagenProducto(producto);
-
-                        return `
-                            <div class="product-image-preview">
-                                ${
-                                    imagen
-                                        ? `<img src="$`
-                                        : '<span>Sin imagen</span>'
-                                }
-                            </div>
-                        `;
-
-                    })()}
+                            return `
+                                <div class="product-image-preview">
+                                    ${
+                                        imagen
+                                            ? `<img
+                                                src="${escapeHtml(imagen)}"
+                                                alt="${escapeHtml(producto.nombre)}"
+                                                loading="lazy"
+                                                onerror="this.style.display='none'; this.parentElement.querySelector('.image-error').style.display='block';"
+                                            >
+                                            <span class="image-error" style="display:none">
+                                                No se pudo cargar la imagen
+                                            </span>`
+                                            : '<span>Sin imagen</span>'
+                                    }
+                                </div>
+                            `;
+                        })()}
 
                         <p><strong>Estado:</strong> ${escapeHtml(producto.estado)}</p>
                         <p><strong>Orden:</strong> ${producto.orden}</p>
