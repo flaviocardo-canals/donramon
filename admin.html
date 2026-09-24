@@ -927,6 +927,7 @@
                             <strong>${escapeHtml(producto.nombre)}</strong>
                             — ${escapeHtml(producto.rubro ? producto.rubro.nombre : 'Sin rubro')}
                         </span>
+                        
                         <span class="badge ${producto.bcondicion ? 'badge-activo' : 'badge-inactivo'}">
                             ${producto.bcondicion ? 'Activo' : 'Inactivo'}
                         </span>
@@ -943,8 +944,9 @@
                         </div>
 
                         <div class="product-image-preview">
-                            ${producto.imagen_url
-                                ? `<img src="${escapeHtml(producto.imagen_url)}" alt="${escapeHtml(producto.nombre)}">`
+                            ${getImagenProducto(producto)
+                                ? `<img
+                                        src="${getImagenProducto(producto)}
                                 : '<span>Sin imagen</span>'}
                         </div>
 
@@ -960,6 +962,7 @@
                                     <th>Tamaño</th>
                                     <th>Precio</th>
                                     <th>Stock</th>
+                                    <th>Imagen</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -1010,6 +1013,14 @@
                                 <label>Stock (vacío = sin control)</label>
                                 <input type="number" id="nuevoStock-${producto.id}">
                             </div>
+                            <div class="field">
+                                <label>Archivo imagen</label>
+
+                                <input
+                                    type="text"
+                                    id="productoImagenArchivo"
+                                    placeholder="latte.jpeg">
+                            </div>
                             <button class="btn btn-sm" onclick="agregarVariante(${producto.id})">
                                 Agregar variante
                             </button>
@@ -1019,7 +1030,31 @@
             `).join('');
         }
 
-        
+        function getImagenProducto(producto) {
+
+                if (!producto.imagen_archivo) {
+                    return null;
+                }
+
+                
+                const rubro =
+                    normalizarTexto(
+                        producto.rubro?.nombre || ''
+                    );
+
+                if (!rubro) {
+                    return null;
+                }
+
+                const ruta = `fotos/${rubro}/${producto.imagen_archivo}`;
+
+                const { data } = supabaseClient.storage
+                    .from('productos')
+                    .getPublicUrl(ruta);
+
+                return data.publicUrl;
+        }
+
 
         async function guardarProducto(){
 
@@ -1047,7 +1082,9 @@
                 document.getElementById('editDescripcion')
                 .value.trim();
 
-            
+            const imagen_archivo =
+                document.getElementById('editImagenArchivo')
+                .value.trim();
 
             const { error } =
                 await supabaseClient
@@ -1057,7 +1094,8 @@
                     rubro_id,
                     estado,
                     orden,
-                    descripcion
+                    descripcion,
+                    imagen_archivo
                    
                 })
                 .eq('id', editId);
@@ -1082,6 +1120,7 @@
             const estado = document.getElementById('productoEstado').value;
             const orden = Number(document.getElementById('productoOrden').value) || 0;
             const descripcion = document.getElementById('productoDescripcion').value.trim();
+            const imagen_archivo = document.getElementById('productoImagenArchivo').value.trim();
 
             if (!nombre || !rubro_id) {
                 alert('Completá al menos el nombre y el rubro.');
@@ -1089,7 +1128,7 @@
             }
 
             const { error } = await supabaseClient.from('productos').insert({
-                nombre, rubro_id, estado, orden, descripcion
+                nombre, rubro_id, estado, orden, descripcion, imagen_archivo
             });
 
             if (error) {
@@ -1100,6 +1139,7 @@
             document.getElementById('productoNombre').value = '';
             document.getElementById('productoDescripcion').value = '';
             document.getElementById('productoOrden').value = '0';
+            document.getElementById('productoImagenArchivo').value = '';
            
             await cargarProductos();
         }
@@ -1191,6 +1231,14 @@
 
                     <textarea
                         id="editDescripcion">${escapeHtml(producto.descripcion || '')}</textarea>
+                </div>
+
+                <div class="field">
+                    <label>Archivo imagen</label>
+
+                    <input
+                        id="editImagenArchivo"
+                        value="${escapeHtml(producto.imagen_archivo || '')}">
                 </div>
 
                 <button
@@ -1321,6 +1369,16 @@
         }
 
         checkSesionInicial();
+
+
+        function normalizarTexto(texto){
+
+            return texto
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+        }
     </script>
 </body>
 
