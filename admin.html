@@ -982,9 +982,13 @@
                                             </span>
                                         </td>
                                         <td class="actions-cell">
-                                            <button class="btn btn-sm btn-secondary" onclick="editarVariante(${precio.id}, ${precio.tamanio ? precio.tamanio.id : 'null'}, ${precio.precio}, ${precio.stock === null ? 'null' : precio.stock})">
-                                                Modificar
+                                           
+                                            <button
+                                                class="btn btn-sm btn-secondary"
+                                                onclick="editarProducto(${producto.id})">
+                                                Modificar producto
                                             </button>
+
                                             <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('producto_precios', ${precio.id}, ${!precio.bcondicion})">
                                                 ${precio.bcondicion ? 'Baja' : 'Reactivar'}
                                             </button>
@@ -1030,8 +1034,10 @@
                 .value.trim();
 
             const rubro_id =
-                document.getElementById('editRubro')
-                .value;
+                Number(
+                    document.getElementById('editRubro')
+                    .value
+                );
 
             const estado =
                 document.getElementById('editEstado')
@@ -1041,7 +1047,7 @@
                 Number(
                     document.getElementById('editOrden')
                     .value
-                );
+                ) || 0;
 
             const descripcion =
                 document.getElementById('editDescripcion')
@@ -1049,7 +1055,7 @@
 
             const imagen_url =
                 document.getElementById('editImagen')
-                .value.trim();
+                .value || null;
 
             const { error } =
                 await supabaseClient
@@ -1065,7 +1071,7 @@
                 .eq('id', editId);
 
             if(error){
-                alert(error.message);
+                alert('Error: ' + error.message);
                 return;
             }
 
@@ -1108,68 +1114,132 @@
             await cargarProductos();
         }
 
-        async function editarProducto(productoId) {
-            const { data: producto, error } = await supabaseClient
+       async function editarProducto(productoId){
+
+            const { data: producto, error } =
+                await supabaseClient
                 .from('productos')
-                .select('id, nombre, rubro_id, estado, orden, descripcion, imagen_url')
+                .select('*')
                 .eq('id', productoId)
                 .single();
 
-            if (error || !producto) {
-                alert('No se pudo cargar el producto para modificar.');
+            if(error){
+                alert(error.message);
                 return;
             }
 
-            const nombre = prompt('Nombre:', producto.nombre);
-            if (nombre === null) return;
+            editId = productoId;
 
-            const rubroActual = rubrosCache.find(r => String(r.id) === String(producto.rubro_id));
-            const rubroNombre = prompt('Rubro actual: ' + (rubroActual ? rubroActual.nombre : 'Sin rubro') + '\nIngresá el ID del nuevo rubro o dejá el actual:', producto.rubro_id);
-            if (rubroNombre === null) return;
+            abrirModal('Editar Producto',`
 
-            const rubro_id = Number(rubroNombre);
-            if (!rubro_id || !rubrosCache.some(r => Number(r.id) === rubro_id && r.bcondicion)) {
-                alert('El ID de rubro no es válido.');
-                return;
-            }
+                <div class="field">
+                    <label>Nombre</label>
+                    <input
+                        id="editNombre"
+                        value="${escapeHtml(producto.nombre)}">
+                </div>
 
-            const estado = prompt('Estado (disponible, consultar, pendiente, sin_stock):', producto.estado);
-            if (estado === null) return;
+                <div class="field">
+                    <label>Rubro</label>
 
-            const ordenRaw = prompt('Orden:', producto.orden);
-            if (ordenRaw === null) return;
-            const orden = Number(ordenRaw);
-            if (!Number.isFinite(orden)) {
-                alert('El orden debe ser numérico.');
-                return;
-            }
+                    <select id="editRubro">
 
-            const descripcion = prompt('Descripción:', producto.descripcion || '');
-            if (descripcion === null) return;
+                        ${rubrosCache
+                            .filter(r => r.bcondicion)
+                            .map(r => `
+                                <option
+                                    value="${r.id}"
+                                    ${Number(r.id) === Number(producto.rubro_id) ? 'selected' : ''}>
+                                    ${escapeHtml(r.nombre)}
+                                </option>
+                            `).join('')}
 
-            const imagen_url = prompt('URL/ruta de la imagen (vacío = sin imagen):', producto.imagen_url || '');
-            if (imagen_url === null) return;
+                    </select>
+                </div>
 
-            const { error: updateError } = await supabaseClient
-                .from('productos')
-                .update({
-                    nombre: nombre.trim(),
-                    rubro_id,
-                    estado: estado.trim(),
-                    orden,
-                    descripcion: descripcion.trim(),
-                    imagen_url: imagen_url.trim() || null
-                })
-                .eq('id', productoId);
+                <div class="field">
+                    <label>Estado</label>
 
-            if (updateError) {
-                alert('No se pudo modificar el producto: ' + updateError.message);
-                return;
-            }
+                    <select id="editEstado">
 
-            await cargarProductos();
-            document.getElementById('producto-body-' + productoId)?.classList.add('open');
+                        <option value="disponible"
+                            ${producto.estado==='disponible'?'selected':''}>
+                            Disponible
+                        </option>
+
+                        <option value="consultar"
+                            ${producto.estado==='consultar'?'selected':''}>
+                            Consultar
+                        </option>
+
+                        <option value="pendiente"
+                            ${producto.estado==='pendiente'?'selected':''}>
+                            Pendiente
+                        </option>
+
+                        <option value="sin_stock"
+                            ${producto.estado==='sin_stock'?'selected':''}>
+                            Sin stock
+                        </option>
+
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Orden</label>
+
+                    <input
+                        type="number"
+                        id="editOrden"
+                        value="${producto.orden || 0}">
+                </div>
+
+                <div class="field">
+                    <label>Imagen</label>
+
+                    <select id="editImagen">
+
+                        <option value="">Sin imagen</option>
+
+                        ${imagenesCache.map(item => {
+
+                            const path =
+                                STORAGE_FOLDER + '/' + item.name;
+
+                            const { data } =
+                                supabaseClient.storage
+                                .from(STORAGE_BUCKET)
+                                .getPublicUrl(path);
+
+                            return `
+                                <option
+                                    value="${data.publicUrl}"
+                                    ${producto.imagen_url === data.publicUrl ? 'selected' : ''}>
+                                    ${escapeHtml(item.name)}
+                                </option>
+                            `;
+                        }).join('')}
+
+                    </select>
+
+                </div>
+
+                <div class="field">
+                    <label>Descripción</label>
+
+                    <textarea
+                        id="editDescripcion">${escapeHtml(producto.descripcion || '')}</textarea>
+                </div>
+
+                <button
+                    class="btn"
+                    onclick="guardarProducto()">
+                    Guardar cambios
+                </button>
+
+            `);
         }
+
 
         async function agregarVariante(productoId) {
             const tamanioId = document.getElementById('nuevoTamanio-' + productoId).value || null;
