@@ -1,0 +1,1430 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Don Ramón Pâtisserie · Administración</title>
+
+    <style>
+        :root {
+            --brown: #7b3714;
+            --brown-dark: #5e260b;
+            --cream: #fbf5ee;
+            --ink: #33261f;
+            --border: #d9bfa5;
+            --success: #39713d;
+            --danger: #a33;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--cream);
+            color: var(--ink);
+            font: 14px Arial, sans-serif;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--brown);
+            color: white;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        header button {
+            padding: 8px 14px;
+            border: 1px solid white;
+            border-radius: 8px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+        }
+
+        header button:hover {
+            background: rgba(255, 255, 255, .15);
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Login */
+        .login-box {
+            max-width: 360px;
+            margin: 80px auto;
+            padding: 28px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: white;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+        }
+
+        .login-box h2 {
+            margin: 0 0 18px;
+            color: var(--brown);
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--brown);
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            padding: 9px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .btn {
+            padding: 9px 16px;
+            border: 0;
+            border-radius: 8px;
+            background: var(--brown);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .btn:hover {
+            background: var(--brown-dark);
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1px solid var(--brown);
+            color: var(--brown);
+        }
+
+        .btn-secondary:hover {
+            background: #f7ead8;
+        }
+
+        .btn-danger {
+            background: white;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #fbeaea;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .error-text {
+            margin-top: 10px;
+            color: var(--danger);
+            font-size: 13px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 9px 14px;
+            border: 1px solid var(--brown);
+            border-radius: 999px;
+            background: transparent;
+            color: var(--brown);
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            background: var(--brown);
+            color: white;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .panel-card {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: white;
+            margin-bottom: 18px;
+        }
+
+        .panel-card h3 {
+            margin: 0 0 14px;
+            color: var(--brown);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .form-row .field {
+            flex: 1;
+            min-width: 140px;
+            margin-bottom: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        th {
+            color: var(--brown);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        tr.inactivo {
+            opacity: .5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .badge-activo {
+            background: #e8f4e8;
+            color: var(--success);
+        }
+
+        .badge-inactivo {
+            background: #f0f0f0;
+            color: #888;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 6px;
+        }
+
+        .productos-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .producto-row {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .producto-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            background: #fbf5ee;
+            cursor: pointer;
+        }
+
+        .producto-header strong {
+            color: var(--brown);
+        }
+
+        .producto-body {
+            display: none;
+            padding: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        .producto-body.open {
+            display: block;
+        }
+
+        .load-msg {
+            padding: 20px;
+            text-align: center;
+            color: #88654c;
+        }
+
+        .product-image-preview {
+            display: grid;
+            width: 180px;
+            height: 130px;
+            margin: 0 0 16px;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid #dfc7ad;
+            border-radius: 12px;
+            background: #fbf5ee;
+            color: #765b47;
+            font-size: 12px;
+        }
+
+        .product-image-preview img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-help {
+            display: block;
+            margin-top: 5px;
+            color: #88654c;
+            font-size: 11px;
+        }
+
+        /* ============================
+        MODAL EDICIÓN
+        ============================ */
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 9999;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-content {
+            width: 700px;
+            max-width: 95%;
+            margin: 40px auto;
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        }
+
+        .modal-header {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+        }
+
+        .modal-header h3{
+            margin:0;
+            color:var(--brown);
+        }
+
+        .modal-close{
+            border:none;
+            background:none;
+            font-size:24px;
+            cursor:pointer;
+        }
+
+    </style>
+</head>
+<div id="editModal" class="modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <h3 id="editModalTitle">Editar</h3>
+
+            <button
+                class="modal-close"
+                onclick="cerrarModal()">
+                ×
+            </button>
+        </div>
+
+        <div id="modalBody"></div>
+
+    </div>
+
+</div>
+<body>
+    <div id="loginView" class="login-box">
+        <h2>Ingreso administrador</h2>
+
+        <div class="field">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" autocomplete="username">
+        </div>
+
+        <div class="field">
+            <label for="loginPassword">Contraseña</label>
+            <input type="password" id="loginPassword" autocomplete="current-password">
+        </div>
+
+        <button class="btn" type="button" onclick="login()" style="width:100%">Ingresar</button>
+
+        <p class="error-text" id="loginError" style="display:none"></p>
+    </div>
+
+    <div id="adminView" style="display:none">
+        <header>
+            <h1>Don Ramón Pâtisserie · Administración</h1>
+            <button type="button" onclick="logout()">Cerrar sesión</button>
+        </header>
+
+        <div class="wrap">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="rubros" onclick="selectTab('rubros')">Rubros</button>
+                <button class="tab-btn" data-tab="tamanios" onclick="selectTab('tamanios')">Tamaños</button>
+                <button class="tab-btn" data-tab="productos" onclick="selectTab('productos')">Productos</button>
+            </div>
+
+            <!-- RUBROS -->
+            <section class="panel active" id="panel-rubros">
+                <div class="panel-card">
+                    <h3>Nuevo rubro</h3>
+                    <div class="form-row">
+                        <div class="field">
+                            <label>Nombre</label>
+                            <input type="text" id="rubroNombre">
+                        </div>
+                        <div class="field">
+                            <label>Orden</label>
+                            <input type="number" id="rubroOrden" value="0">
+                        </div>
+                        <button class="btn" type="button" onclick="crearRubro()">Agregar</button>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Orden</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaRubros">
+                            <tr><td colspan="4" class="load-msg">Cargando…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAMAÑOS -->
+            <section class="panel" id="panel-tamanios">
+                <div class="panel-card">
+                    <h3>Nuevo tamaño</h3>
+                    <div class="form-row">
+                        <div class="field">
+                            <label>Nombre</label>
+                            <input type="text" id="tamanioNombre">
+                        </div>
+                        <button class="btn" type="button" onclick="crearTamanio()">Agregar</button>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaTamanios">
+                            <tr><td colspan="3" class="load-msg">Cargando…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- PRODUCTOS -->
+            <section class="panel" id="panel-productos">
+                <div class="panel-card">
+                    <h3>Nuevo producto</h3>
+                    <div class="form-row">
+                        <div class="field">
+                            <label>Nombre</label>
+                            <input type="text" id="productoNombre">
+                        </div>
+                        <div class="field">
+                            <label>Rubro</label>
+                            <select id="productoRubro"></select>
+                        </div>
+                       
+                        <div class="field">
+                            <label>Estado</label>
+                            <select id="productoEstado">
+                                <option value="disponible">Disponible</option>
+                                <option value="consultar">Consultar</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="sin_stock">Sin stock</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Orden</label>
+                            <input type="number" id="productoOrden" value="0">
+                        </div>
+                    </div>
+                    <div class="field" style="margin-top:10px">
+                        <label>Descripción</label>
+                        <textarea id="productoDescripcion"></textarea>
+                    </div>
+                    <button class="btn" type="button" onclick="crearProducto()" style="margin-top:10px">
+                        Agregar producto
+                    </button>
+                </div>
+
+                <div class="panel-card">
+                    <h3>Productos cargados</h3>
+                    <div class="productos-list" id="listaProductos">
+                        <p class="load-msg">Cargando…</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ⚠️ Completar con los mismos datos que en index.html
+        const SUPABASE_URL = 'https://eqnmjcdkfptsmaedgnjm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbm1qY2RrZnB0c21hZWRnbmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwOTUxNTYsImV4cCI6MjEwNTY3MTE1Nn0.33PzbGkThx0SrNjwYQBvaBs8I297UIxP8gXJ3WfiuVA';
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let rubrosCache = [];
+        let tamaniosCache = [];
+        let imagenesCache = [];
+        let editType = null;
+        let editId = null;
+
+        // Cambiar solamente si tu bucket/carpeta tienen otros nombres.
+        const STORAGE_BUCKET = 'productos';
+        const STORAGE_FOLDER = 'fotos/';
+
+        /* ---------- Auth ---------- */
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+
+            errorEl.style.display = 'none';
+
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                errorEl.textContent = 'No se pudo ingresar: ' + error.message;
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            mostrarAdmin();
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            document.getElementById('adminView').style.display = 'none';
+            document.getElementById('loginView').style.display = 'block';
+        }
+
+        async function mostrarAdmin() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('adminView').style.display = 'block';
+
+            await Promise.all([cargarRubros(), cargarTamanios(), cargarImagenesStorage()]);
+            await cargarProductos();
+        }
+
+        function abrirModal(titulo, html){
+
+            document.getElementById('editModalTitle').textContent = titulo;
+
+            document.getElementById('modalBody').innerHTML = html;
+
+            document.getElementById('editModal')
+                .classList.add('show');
+        }
+
+        function cerrarModal(){
+
+            document.getElementById('editModal')
+                .classList.remove('show');
+
+            document.getElementById('modalBody').innerHTML = '';
+
+            editType = null;
+            editId = null;
+        }
+
+
+        async function checkSesionInicial() {
+            const { data } = await supabaseClient.auth.getSession();
+
+            if (data.session) {
+                mostrarAdmin();
+            }
+        }
+
+        /* ---------- Tabs ---------- */
+
+        function selectTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === 'panel-' + tab);
+            });
+        }
+
+        /* ---------- Rubros ---------- */
+
+        async function cargarRubros() {
+            const { data, error } = await supabaseClient
+                .from('rubros')
+                .select('*')
+                .order('orden', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            rubrosCache = data;
+            renderTablaRubros();
+            renderSelectRubros();
+        }
+
+        function renderTablaRubros() {
+            document.getElementById('tablaRubros').innerHTML = rubrosCache.map(rubro => `
+                <tr class="${rubro.bcondicion ? '' : 'inactivo'}">
+                    <td>${escapeHtml(rubro.nombre)}</td>
+                    <td>${rubro.orden}</td>
+                    <td>
+                        <span class="badge ${rubro.bcondicion ? 'badge-activo' : 'badge-inactivo'}">
+                            ${rubro.bcondicion ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                   <td class="actions-cell">
+
+                        <button
+                            class="btn btn-sm"
+                            onclick="editarRubro(${rubro.id})">
+                            ✏️ Editar
+                        </button>
+
+                        <button
+                            class="btn btn-sm btn-secondary"
+                            onclick="toggleCondicion('rubros', ${rubro.id}, ${!rubro.bcondicion})">
+                            ${rubro.bcondicion ? 'Dar de baja' : 'Reactivar'}
+                        </button>
+
+                    </td>
+                </tr>
+                
+            `).join('') || '<tr><td colspan="4" class="load-msg">No hay rubros cargados.</td></tr>';
+        }
+
+        function renderSelectRubros() {
+            const select = document.getElementById('productoRubro');
+            select.innerHTML = rubrosCache
+                .filter(rubro => rubro.bcondicion)
+                .map(rubro => `<option value="${rubro.id}">${escapeHtml(rubro.nombre)}</option>`)
+                .join('');
+        }
+
+        function editarRubro(id){
+
+        const rubro = rubrosCache.find(r => r.id == id);
+
+        editType = 'rubro';
+        editId = id;
+
+        abrirModal('Editar Rubro', `
+
+            <div class="field">
+                <label>Nombre</label>
+                <input
+                    id="editNombre"
+                    value="${escapeHtml(rubro.nombre)}">
+            </div>
+
+            <div class="field">
+                <label>Orden</label>
+                <input
+                    type="number"
+                    id="editOrden"
+                    value="${rubro.orden}">
+            </div>
+
+            <button class="btn"
+                onclick="guardarRubro()">
+                Guardar
+            </button>
+
+        `);
+    }
+
+
+        async function guardarRubro(){
+
+            const nombre =
+                document.getElementById('editNombre')
+                .value.trim();
+
+            const orden =
+                Number(
+                    document.getElementById('editOrden')
+                    .value
+                );
+
+            const { error } = await supabaseClient
+                .from('rubros')
+                .update({
+                    nombre,
+                    orden
+                })
+                .eq('id', editId);
+
+            if(error){
+                alert(error.message);
+                return;
+            }
+
+            cerrarModal();
+
+            await cargarRubros();
+        }
+
+
+
+
+
+        async function crearRubro() {
+            const nombre = document.getElementById('rubroNombre').value.trim();
+            const orden = Number(document.getElementById('rubroOrden').value) || 0;
+
+            if (!nombre) {
+                alert('Ingresá un nombre.');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('rubros').insert({ nombre, orden });
+
+            if (error) {
+                alert('No se pudo crear: ' + error.message);
+                return;
+            }
+
+            document.getElementById('rubroNombre').value = '';
+            document.getElementById('rubroOrden').value = '0';
+            await cargarRubros();
+        }
+
+        /* ---------- Tamaños ---------- */
+
+        async function cargarTamanios() {
+            const { data, error } = await supabaseClient
+                .from('tamanios')
+                .select('*')
+                .order('nombre', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            tamaniosCache = data;
+            renderTablaTamanios();
+        }
+
+        
+
+        function renderTablaTamanios() {
+            document.getElementById('tablaTamanios').innerHTML = tamaniosCache.map(tamanio => `
+                <tr class="${tamanio.bcondicion ? '' : 'inactivo'}">
+                    <td>${escapeHtml(tamanio.nombre)}</td>
+                    <td>
+                        <span class="badge ${tamanio.bcondicion ? 'badge-activo' : 'badge-inactivo'}">
+                            ${tamanio.bcondicion ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                   <td class="actions-cell">
+
+                        <button
+                            class="btn btn-sm"
+                            onclick="editarTamanio(${tamanio.id})">
+                            ✏️ Editar
+                        </button>
+
+                        <button
+                            class="btn btn-sm btn-secondary"
+                            onclick="toggleCondicion('tamanios', ${tamanio.id}, ${!tamanio.bcondicion})">
+                            ${tamanio.bcondicion ? 'Dar de baja' : 'Reactivar'}
+                        </button>
+
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="3" class="load-msg">No hay tamaños cargados.</td></tr>';
+        }
+
+
+        function editarTamanio(id){
+
+            const tamanio =
+                tamaniosCache.find(t => t.id == id);
+
+            editId = id;
+
+            abrirModal('Editar Tamaño', `
+
+                <div class="field">
+                    <label>Nombre</label>
+
+                    <input
+                        id="editNombre"
+                        value="${escapeHtml(tamanio.nombre)}">
+                </div>
+
+                <button
+                    class="btn"
+                    onclick="guardarTamanio()">
+                    Guardar
+                </button>
+
+            `);
+        }
+
+
+        async function guardarTamanio(){
+
+            const nombre =
+                document.getElementById('editNombre')
+                .value.trim();
+
+            const { error } =
+                await supabaseClient
+                .from('tamanios')
+                .update({
+                    nombre
+                })
+                .eq('id', editId);
+
+            if(error){
+                alert(error.message);
+                return;
+            }
+
+            cerrarModal();
+
+            await cargarTamanios();
+        }
+
+
+        async function crearTamanio() {
+            const nombre = document.getElementById('tamanioNombre').value.trim();
+
+            if (!nombre) {
+                alert('Ingresá un nombre.');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('tamanios').insert({ nombre });
+
+            if (error) {
+                alert('No se pudo crear: ' + error.message);
+                return;
+            }
+
+            document.getElementById('tamanioNombre').value = '';
+            await cargarTamanios();
+        }
+
+        /* ---------- Productos + precios/variantes ---------- */
+
+        async function cargarProductos() {
+            const { data, error } = await supabaseClient
+                .from('productos')
+                .select(`
+                    *,
+                    rubro:rubros ( nombre ),
+                    precios:producto_precios ( id, precio, stock, bcondicion, tamanio:tamanios ( id, nombre ) )
+                `)
+                .order('orden', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                document.getElementById('listaProductos').innerHTML =
+                    '<p class="load-msg">No se pudieron cargar los productos.</p>';
+                return;
+            }
+
+            renderListaProductos(data);
+        }
+
+        function renderListaProductos(productos) {
+            const contenedor = document.getElementById('listaProductos');
+
+            if (productos.length === 0) {
+                contenedor.innerHTML = '<p class="load-msg">Todavía no hay productos cargados.</p>';
+                return;
+            }
+
+            
+
+            
+            contenedor.innerHTML = productos.map(producto => `
+                <div class="producto-row">
+                    <div class="producto-header" onclick="toggleProducto(${producto.id})">
+                        <span>
+                            <strong>${escapeHtml(producto.nombre)}</strong>
+                            — ${escapeHtml(producto.rubro ? producto.rubro.nombre : 'Sin rubro')}
+                        </span>
+                        
+                        <span class="badge ${producto.bcondicion ? 'badge-activo' : 'badge-inactivo'}">
+                            ${producto.bcondicion ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </div>
+
+                    <div class="producto-body" id="producto-body-${producto.id}">
+                        <div class="form-row" style="margin-bottom:14px">
+                            <button class="btn btn-sm btn-secondary" onclick="editarProducto(${producto.id})">
+                                Modificar producto
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('productos', ${producto.id}, ${!producto.bcondicion})">
+                                ${producto.bcondicion ? 'Dar de baja producto' : 'Reactivar producto'}
+                            </button>
+                        </div>
+
+                         ${renderImagenProducto(producto)}
+
+                        <p><strong>Estado:</strong> ${escapeHtml(producto.estado)}</p>
+                        <p><strong>Orden:</strong> ${producto.orden}</p>
+                        <p><strong>Descripción:</strong> ${escapeHtml(producto.descripcion || '—')}</p>
+
+                        <h4 style="color:var(--brown)">Precios / variantes</h4>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tamaño</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${(producto.precios || []).map(precio => `
+                                    <tr class="${precio.bcondicion ? '' : 'inactivo'}">
+                                        <td>${precio.tamanio ? escapeHtml(precio.tamanio.nombre) : 'Único'}</td>
+                                        <td>$${precio.precio}</td>
+                                        <td>${precio.stock === null ? 'Sin control' : precio.stock}</td>
+                                        <td>
+                                            <span class="badge ${precio.bcondicion ? 'badge-activo' : 'badge-inactivo'}">
+                                                ${precio.bcondicion ? 'Activo' : 'Inactivo'}
+                                            </span>
+                                        </td>
+                                        <td class="actions-cell">
+                                           
+                                           
+                                            <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('producto_precios', ${precio.id}, ${!precio.bcondicion})">
+                                                ${precio.bcondicion ? 'Baja' : 'Reactivar'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('') || '<tr><td colspan="5">Sin variantes cargadas.</td></tr>'}
+                            </tbody>
+                        </table>
+
+                        <div class="form-row" style="margin-top:14px">
+                            <div class="field">
+                                <label>Tamaño (opcional)</label>
+                                <select id="nuevoTamanio-${producto.id}">
+                                    <option value="">Único (sin tamaño)</option>
+                                    ${tamaniosCache.filter(t => t.bcondicion).map(t =>
+                                        `<option value="${t.id}">${escapeHtml(t.nombre)}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Precio</label>
+                                <input type="number" step="0.01" id="nuevoPrecio-${producto.id}">
+                            </div>
+                            <div class="field">
+                                <label>Stock (vacío = sin control)</label>
+                                <input type="number" id="nuevoStock-${producto.id}">
+                            </div>
+                            <div class="field">
+                                <label>Archivo imagen</label>
+
+                                <input
+                                    type="text"
+                                    id="productoImagenArchivo-${producto.id}"
+                                    placeholder="latte.jpeg"
+                                    value="${escapeHtml(producto.imagen_archivo || '')}">
+                            </div>
+                            <button class="btn btn-sm" onclick="agregarVariante(${producto.id})">
+                                Agregar variante
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderImagenProducto(producto) {
+            const imagen = getImagenProducto(producto);
+
+            if (!imagen) {
+                return `
+                    <div class="product-image-preview">
+                        <span>Sin imagen</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="product-image-preview">
+                    <img
+                        src="${escapeHtml(imagen)}"
+                        alt="${escapeHtml(producto.nombre)}"
+                        loading="lazy"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                    >
+                    <span class="image-error" style="display:none">
+                        No se pudo cargar la imagen
+                    </span>
+                </div>
+            `;
+        }
+
+        const carpetasImagenesPorRubro = {
+            'Café': 'fotos/cafe',
+            'Pasteleria y Laminados': 'fotos/laminados',
+            'Salados': 'fotos/salados',
+            'Cookies': 'fotos/cookies',
+            'Adicionales': 'fotos/adicionales',
+            'Infusiones': 'fotos/infusiones'
+        };
+
+        function getImagenProducto(producto) {
+            const archivo = (producto.imagen_archivo || '').trim();
+
+            if (!archivo) {
+                return null;
+            }
+
+            const rubroNormalizado = normalizarTexto(
+                producto.rubro?.nombre || ''
+            );
+
+            const carpeta = carpetasImagenesPorRubro[rubroNormalizado];
+
+            if (!carpeta) {
+                console.warn(
+                    'No existe carpeta de imágenes configurada para el rubro:',
+                    producto.rubro?.nombre
+                );
+
+                return null;
+            }
+
+            const ruta = `${carpeta}/${archivo}`;
+
+            const { data } = supabaseClient.storage
+                .from('productos')
+                .getPublicUrl(ruta);
+
+            console.log('Imagen de producto:', {
+                producto: producto.nombre,
+                rubro: producto.rubro?.nombre,
+                carpeta,
+                archivo,
+                ruta,
+                publicUrl: data.publicUrl
+            });
+
+            return data.publicUrl;
+        }
+
+
+        async function guardarProducto(){
+
+            const nombre =
+                document.getElementById('editNombre')
+                .value.trim();
+
+            const rubro_id =
+                Number(
+                    document.getElementById('editRubro')
+                    .value
+                );
+
+            const estado =
+                document.getElementById('editEstado')
+                .value;
+
+            const orden =
+                Number(
+                    document.getElementById('editOrden')
+                    .value
+                ) || 0;
+
+            const descripcion =
+                document.getElementById('editDescripcion')
+                .value.trim();
+
+            const imagen_archivo =
+                document.getElementById('editImagenArchivo')
+                .value.trim();
+
+            const { error } =
+                await supabaseClient
+                .from('productos')
+                .update({
+                    nombre,
+                    rubro_id,
+                    estado,
+                    orden,
+                    descripcion,
+                    imagen_archivo
+                   
+                })
+                .eq('id', editId);
+
+            if(error){
+                alert('Error: ' + error.message);
+                return;
+            }
+
+            cerrarModal();
+
+            await cargarProductos();
+        }
+
+        function toggleProducto(id) {
+            document.getElementById('producto-body-' + id).classList.toggle('open');
+        }
+
+        async function crearProducto() {
+            const nombre = document.getElementById('productoNombre').value.trim();
+            const rubro_id = document.getElementById('productoRubro').value;
+            const estado = document.getElementById('productoEstado').value;
+            const orden = Number(document.getElementById('productoOrden').value) || 0;
+            const descripcion = document.getElementById('productoDescripcion').value.trim();
+            const imagen_archivo = document.getElementById('productoImagenArchivo').value.trim();
+
+            if (!nombre || !rubro_id) {
+                alert('Completá al menos el nombre y el rubro.');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('productos').insert({
+                nombre, rubro_id, estado, orden, descripcion, imagen_archivo
+            });
+
+            if (error) {
+                alert('No se pudo crear el producto: ' + error.message);
+                return;
+            }
+
+            document.getElementById('productoNombre').value = '';
+            document.getElementById('productoDescripcion').value = '';
+            document.getElementById('productoOrden').value = '0';
+            document.getElementById('productoImagenArchivo').value = '';
+           
+            await cargarProductos();
+        }
+
+       async function editarProducto(productoId){
+
+            const { data: producto, error } =
+                await supabaseClient
+                .from('productos')
+                .select('*')
+                .eq('id', productoId)
+                .single();
+
+            if(error){
+                alert(error.message);
+                return;
+            }
+
+            editId = productoId;
+
+            abrirModal('Editar Producto',`
+
+                <div class="field">
+                    <label>Nombre</label>
+                    <input
+                        id="editNombre"
+                        value="${escapeHtml(producto.nombre)}">
+                </div>
+
+                <div class="field">
+                    <label>Rubro</label>
+
+                    <select id="editRubro">
+
+                        ${rubrosCache
+                            .filter(r => r.bcondicion)
+                            .map(r => `
+                                <option
+                                    value="${r.id}"
+                                    ${Number(r.id) === Number(producto.rubro_id) ? 'selected' : ''}>
+                                    ${escapeHtml(r.nombre)}
+                                </option>
+                            `).join('')}
+
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Estado</label>
+
+                    <select id="editEstado">
+
+                        <option value="disponible"
+                            ${producto.estado==='disponible'?'selected':''}>
+                            Disponible
+                        </option>
+
+                        <option value="consultar"
+                            ${producto.estado==='consultar'?'selected':''}>
+                            Consultar
+                        </option>
+
+                        <option value="pendiente"
+                            ${producto.estado==='pendiente'?'selected':''}>
+                            Pendiente
+                        </option>
+
+                        <option value="sin_stock"
+                            ${producto.estado==='sin_stock'?'selected':''}>
+                            Sin stock
+                        </option>
+
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Orden</label>
+
+                    <input
+                        type="number"
+                        id="editOrden"
+                        value="${producto.orden || 0}">
+                </div>
+
+                
+
+                <div class="field">
+                    <label>Descripción</label>
+
+                    <textarea
+                        id="editDescripcion">${escapeHtml(producto.descripcion || '')}</textarea>
+                </div>
+
+                <div class="field">
+                    <label>Archivo imagen</label>
+
+                    <input
+                        id="editImagenArchivo"
+                        value="${escapeHtml(producto.imagen_archivo || '')}">
+                </div>
+
+                <button
+                    class="btn"
+                    onclick="guardarProducto()">
+                    Guardar cambios
+                </button>
+
+            `);
+        }
+
+
+        async function agregarVariante(productoId) {
+            const tamanioId = document.getElementById('nuevoTamanio-' + productoId).value || null;
+            const precio = Number(document.getElementById('nuevoPrecio-' + productoId).value);
+            const stockRaw = document.getElementById('nuevoStock-' + productoId).value;
+            const stock = stockRaw === '' ? null : Number(stockRaw);
+
+            if (!precio || precio <= 0) {
+                alert('Ingresá un precio válido.');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('producto_precios').insert({
+                producto_id: productoId,
+                tamanio_id: tamanioId,
+                precio,
+                stock
+            });
+
+            if (error) {
+                alert('No se pudo agregar la variante: ' + error.message);
+                return;
+            }
+
+            await cargarProductos();
+            document.getElementById('producto-body-' + productoId)?.classList.add('open');
+        }
+
+        async function editarVariante(precioId, tamanioActual, precioActual, stockActual) {
+            const precioRaw = prompt('Precio:', precioActual);
+            if (precioRaw === null) return;
+            const precio = Number(precioRaw);
+            if (!Number.isFinite(precio) || precio <= 0) {
+                alert('Ingresá un precio válido.');
+                return;
+            }
+
+            const stockRaw = prompt('Stock (vacío = sin control):', stockActual === null ? '' : stockActual);
+            if (stockRaw === null) return;
+            const stock = stockRaw.trim() === '' ? null : Number(stockRaw);
+            if (stock !== null && (!Number.isFinite(stock) || stock < 0)) {
+                alert('Ingresá un stock válido.');
+                return;
+            }
+
+            const tamanioRaw = prompt('ID del tamaño (vacío = Único):', tamanioActual === null ? '' : tamanioActual);
+            if (tamanioRaw === null) return;
+            const tamanio_id = tamanioRaw.trim() === '' ? null : Number(tamanioRaw);
+            if (tamanio_id !== null && !tamaniosCache.some(t => Number(t.id) === tamanio_id && t.bcondicion)) {
+                alert('El ID de tamaño no es válido.');
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from('producto_precios')
+                .update({ precio, stock, tamanio_id })
+                .eq('id', precioId);
+
+            if (error) {
+                alert('No se pudo actualizar la variante: ' + error.message);
+                return;
+            }
+
+            await cargarProductos();
+        }
+
+        async function cargarImagenesStorage() {
+            const { data, error } = await supabaseClient.storage
+                .from(STORAGE_BUCKET)
+                .list(STORAGE_FOLDER, { limit: 100, sortBy: { column: 'name', order: 'asc' } });
+
+            if (error) {
+                console.warn('No se pudieron cargar imágenes desde Storage:', error.message);
+                return;
+            }
+
+            imagenesCache = (data || []).filter(item => item.name && !item.id?.endsWith('/'));
+            const select = document.getElementById('productoImagen');
+            if (!select) return;
+
+            select.innerHTML = '<option value="">Sin imagen</option>' + imagenesCache.map(item => {
+                const path = STORAGE_FOLDER ? STORAGE_FOLDER + '/' + item.name : item.name;
+                const { data: publicData } = supabaseClient.storage
+                    .from(STORAGE_BUCKET)
+                    .getPublicUrl(path);
+                return `<option value="${escapeHtml(publicData.publicUrl)}">${escapeHtml(item.name)}</option>`;
+            }).join('');
+        }
+
+                /* ---------- Alta/baja genérica ---------- */
+
+        async function toggleCondicion(tabla, id, nuevoValor) {
+            const { error } = await supabaseClient
+                .from(tabla)
+                .update({ bcondicion: nuevoValor })
+                .eq('id', id);
+
+            if (error) {
+                alert('No se pudo actualizar: ' + error.message);
+                return;
+            }
+
+            if (tabla === 'rubros') await cargarRubros();
+            if (tabla === 'tamanios') await cargarTamanios();
+            if (tabla === 'productos' || tabla === 'producto_precios') await cargarProductos();
+        }
+
+        /* ---------- Utilidades ---------- */
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        checkSesionInicial();
+
+   
+        function normalizarTexto(texto) {
+            return String(texto || '')
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+        
+    </script>
+</body>
+
+</html>

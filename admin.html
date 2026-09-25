@@ -61,7 +61,6 @@
             padding: 24px;
         }
 
-        /* Login */
         .login-box {
             max-width: 360px;
             margin: 80px auto;
@@ -143,13 +142,22 @@
             font-size: 12px;
         }
 
+        .btn-link {
+            border: 0;
+            background: transparent;
+            color: var(--brown);
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: underline;
+            padding: 0;
+        }
+
         .error-text {
             margin-top: 10px;
             color: var(--danger);
             font-size: 13px;
         }
 
-        /* Tabs */
         .tabs {
             display: flex;
             gap: 6px;
@@ -191,6 +199,9 @@
         .panel-card h3 {
             margin: 0 0 14px;
             color: var(--brown);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .form-row {
@@ -251,18 +262,14 @@
         .actions-cell {
             display: flex;
             gap: 6px;
-        }
-
-        .productos-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .producto-row {
             border: 1px solid var(--border);
             border-radius: 10px;
             overflow: hidden;
+            margin-bottom: 8px;
         }
 
         .producto-header {
@@ -294,102 +301,9 @@
             text-align: center;
             color: #88654c;
         }
-
-        .product-image-preview {
-            display: grid;
-            width: 180px;
-            height: 130px;
-            margin: 0 0 16px;
-            place-items: center;
-            overflow: hidden;
-            border: 1px solid #dfc7ad;
-            border-radius: 12px;
-            background: #fbf5ee;
-            color: #765b47;
-            font-size: 12px;
-        }
-
-        .product-image-preview img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .image-help {
-            display: block;
-            margin-top: 5px;
-            color: #88654c;
-            font-size: 11px;
-        }
-
-        /* ============================
-        MODAL EDICIÓN
-        ============================ */
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.55);
-            z-index: 9999;
-            overflow-y: auto;
-        }
-
-        .modal.show {
-            display: block;
-        }
-
-        .modal-content {
-            width: 700px;
-            max-width: 95%;
-            margin: 40px auto;
-            background: white;
-            border-radius: 14px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,.25);
-        }
-
-        .modal-header {
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:20px;
-        }
-
-        .modal-header h3{
-            margin:0;
-            color:var(--brown);
-        }
-
-        .modal-close{
-            border:none;
-            background:none;
-            font-size:24px;
-            cursor:pointer;
-        }
-
     </style>
 </head>
-<div id="editModal" class="modal">
 
-    <div class="modal-content">
-
-        <div class="modal-header">
-            <h3 id="editModalTitle">Editar</h3>
-
-            <button
-                class="modal-close"
-                onclick="cerrarModal()">
-                ×
-            </button>
-        </div>
-
-        <div id="modalBody"></div>
-
-    </div>
-
-</div>
 <body>
     <div id="loginView" class="login-box">
         <h2>Ingreso administrador</h2>
@@ -420,12 +334,15 @@
                 <button class="tab-btn active" data-tab="rubros" onclick="selectTab('rubros')">Rubros</button>
                 <button class="tab-btn" data-tab="tamanios" onclick="selectTab('tamanios')">Tamaños</button>
                 <button class="tab-btn" data-tab="productos" onclick="selectTab('productos')">Productos</button>
+                <button class="tab-btn" data-tab="promociones" onclick="selectTab('promociones')">Promociones</button>
             </div>
 
             <!-- RUBROS -->
             <section class="panel active" id="panel-rubros">
                 <div class="panel-card">
-                    <h3>Nuevo rubro</h3>
+                    <h3>
+                        <span id="formRubroTitulo">Nuevo rubro</span>
+                    </h3>
                     <div class="form-row">
                         <div class="field">
                             <label>Nombre</label>
@@ -435,7 +352,8 @@
                             <label>Orden</label>
                             <input type="number" id="rubroOrden" value="0">
                         </div>
-                        <button class="btn" type="button" onclick="crearRubro()">Agregar</button>
+                        <button class="btn" type="button" id="btnGuardarRubro" onclick="guardarRubro()">Agregar</button>
+                        <button class="btn btn-link" type="button" id="btnCancelarEdicionRubro" style="display:none" onclick="cancelarEdicionRubro()">Cancelar edición</button>
                     </div>
                 </div>
 
@@ -459,13 +377,16 @@
             <!-- TAMAÑOS -->
             <section class="panel" id="panel-tamanios">
                 <div class="panel-card">
-                    <h3>Nuevo tamaño</h3>
+                    <h3>
+                        <span id="formTamanioTitulo">Nuevo tamaño</span>
+                    </h3>
                     <div class="form-row">
                         <div class="field">
                             <label>Nombre</label>
                             <input type="text" id="tamanioNombre">
                         </div>
-                        <button class="btn" type="button" onclick="crearTamanio()">Agregar</button>
+                        <button class="btn" type="button" id="btnGuardarTamanio" onclick="guardarTamanio()">Agregar</button>
+                        <button class="btn btn-link" type="button" id="btnCancelarEdicionTamanio" style="display:none" onclick="cancelarEdicionTamanio()">Cancelar edición</button>
                     </div>
                 </div>
 
@@ -488,7 +409,9 @@
             <!-- PRODUCTOS -->
             <section class="panel" id="panel-productos">
                 <div class="panel-card">
-                    <h3>Nuevo producto</h3>
+                    <h3>
+                        <span id="formProductoTitulo">Nuevo producto</span>
+                    </h3>
                     <div class="form-row">
                         <div class="field">
                             <label>Nombre</label>
@@ -498,13 +421,16 @@
                             <label>Rubro</label>
                             <select id="productoRubro"></select>
                         </div>
-                       
+                        <div class="field">
+                            <label>Ícono (emoji)</label>
+                            <input type="text" id="productoIcono" placeholder="☕" maxlength="4">
+                        </div>
                         <div class="field">
                             <label>Estado</label>
                             <select id="productoEstado">
                                 <option value="disponible">Disponible</option>
                                 <option value="consultar">Consultar</option>
-                                <option value="pendiente">Pendiente</option>
+                                <option value="pendiente">Pendiente (no se puede pedir)</option>
                                 <option value="sin_stock">Sin stock</option>
                             </select>
                         </div>
@@ -517,14 +443,67 @@
                         <label>Descripción</label>
                         <textarea id="productoDescripcion"></textarea>
                     </div>
-                    <button class="btn" type="button" onclick="crearProducto()" style="margin-top:10px">
-                        Agregar producto
-                    </button>
+                    <div style="margin-top:10px; display:flex; gap:10px">
+                        <button class="btn" type="button" id="btnGuardarProducto" onclick="guardarProducto()">
+                            Agregar producto
+                        </button>
+                        <button class="btn btn-link" type="button" id="btnCancelarEdicionProducto" style="display:none" onclick="cancelarEdicionProducto()">
+                            Cancelar edición
+                        </button>
+                    </div>
                 </div>
 
                 <div class="panel-card">
                     <h3>Productos cargados</h3>
                     <div class="productos-list" id="listaProductos">
+                        <p class="load-msg">Cargando…</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PROMOCIONES -->
+            <section class="panel" id="panel-promociones">
+                <div class="panel-card">
+                    <h3>
+                        <span id="formPromoTitulo">Nueva promoción</span>
+                    </h3>
+                    <div class="form-row">
+                        <div class="field">
+                            <label>Nombre</label>
+                            <input type="text" id="promoNombre" placeholder="Ej: Combo 1: Café + Cookie">
+                        </div>
+                        <div class="field">
+                            <label>Precio del combo</label>
+                            <input type="number" step="0.01" id="promoPrecio">
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top:10px">
+                        <div class="field">
+                            <label>Vigente desde (opcional)</label>
+                            <input type="date" id="promoFechaDesde">
+                        </div>
+                        <div class="field">
+                            <label>Vigente hasta (opcional)</label>
+                            <input type="date" id="promoFechaHasta">
+                        </div>
+                    </div>
+                    <div class="field" style="margin-top:10px">
+                        <label>Descripción</label>
+                        <textarea id="promoDescripcion"></textarea>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:10px">
+                        <button class="btn" type="button" id="btnGuardarPromo" onclick="guardarPromo()">
+                            Crear promoción
+                        </button>
+                        <button class="btn btn-link" type="button" id="btnCancelarEdicionPromo" style="display:none" onclick="cancelarEdicionPromo()">
+                            Cancelar edición
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <h3>Promociones cargadas</h3>
+                    <div id="listaPromociones">
                         <p class="load-msg">Cargando…</p>
                     </div>
                 </div>
@@ -536,20 +515,16 @@
 
     <script>
         // ⚠️ Completar con los mismos datos que en index.html
-        const SUPABASE_URL = 'https://eqnmjcdkfptsmaedgnjm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbm1qY2RrZnB0c21hZWRnbmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwOTUxNTYsImV4cCI6MjEwNTY3MTE1Nn0.33PzbGkThx0SrNjwYQBvaBs8I297UIxP8gXJ3WfiuVA';
+        const SUPABASE_URL = 'TU_SUPABASE_URL_AQUI';
+        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY_AQUI';
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let rubrosCache = [];
         let tamaniosCache = [];
-        let imagenesCache = [];
-        let editType = null;
-        let editId = null;
-
-        // Cambiar solamente si tu bucket/carpeta tienen otros nombres.
-        const STORAGE_BUCKET = 'productos';
-        const STORAGE_FOLDER = 'fotos/';
+        let productosCache = [];
+        let productoPreciosCache = [];
+        let promocionesCache = [];
 
         /* ---------- Auth ---------- */
 
@@ -581,31 +556,12 @@
             document.getElementById('loginView').style.display = 'none';
             document.getElementById('adminView').style.display = 'block';
 
-            await Promise.all([cargarRubros(), cargarTamanios(), cargarImagenesStorage()]);
+            await cargarRubros();
+            await cargarTamanios();
+            await cargarProductoPreciosParaSelect();
             await cargarProductos();
+            await cargarPromociones();
         }
-
-        function abrirModal(titulo, html){
-
-            document.getElementById('editModalTitle').textContent = titulo;
-
-            document.getElementById('modalBody').innerHTML = html;
-
-            document.getElementById('editModal')
-                .classList.add('show');
-        }
-
-        function cerrarModal(){
-
-            document.getElementById('editModal')
-                .classList.remove('show');
-
-            document.getElementById('modalBody').innerHTML = '';
-
-            editType = null;
-            editId = null;
-        }
-
 
         async function checkSesionInicial() {
             const { data } = await supabaseClient.auth.getSession();
@@ -655,23 +611,15 @@
                             ${rubro.bcondicion ? 'Activo' : 'Inactivo'}
                         </span>
                     </td>
-                   <td class="actions-cell">
-
-                        <button
-                            class="btn btn-sm"
-                            onclick="editarRubro(${rubro.id})">
-                            ✏️ Editar
+                    <td class="actions-cell">
+                        <button class="btn btn-sm btn-secondary" onclick="iniciarEdicionRubro(rubrosCache.find(r => r.id === ${rubro.id}))">
+                            Modificar
                         </button>
-
-                        <button
-                            class="btn btn-sm btn-secondary"
-                            onclick="toggleCondicion('rubros', ${rubro.id}, ${!rubro.bcondicion})">
+                        <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('rubros', ${rubro.id}, ${!rubro.bcondicion}, cargarRubros)">
                             ${rubro.bcondicion ? 'Dar de baja' : 'Reactivar'}
                         </button>
-
                     </td>
                 </tr>
-                
             `).join('') || '<tr><td colspan="4" class="load-msg">No hay rubros cargados.</td></tr>';
         }
 
@@ -683,74 +631,27 @@
                 .join('');
         }
 
-        function editarRubro(id){
+        let editingRubroId = null;
 
-        const rubro = rubrosCache.find(r => r.id == id);
-
-        editType = 'rubro';
-        editId = id;
-
-        abrirModal('Editar Rubro', `
-
-            <div class="field">
-                <label>Nombre</label>
-                <input
-                    id="editNombre"
-                    value="${escapeHtml(rubro.nombre)}">
-            </div>
-
-            <div class="field">
-                <label>Orden</label>
-                <input
-                    type="number"
-                    id="editOrden"
-                    value="${rubro.orden}">
-            </div>
-
-            <button class="btn"
-                onclick="guardarRubro()">
-                Guardar
-            </button>
-
-        `);
-    }
-
-
-        async function guardarRubro(){
-
-            const nombre =
-                document.getElementById('editNombre')
-                .value.trim();
-
-            const orden =
-                Number(
-                    document.getElementById('editOrden')
-                    .value
-                );
-
-            const { error } = await supabaseClient
-                .from('rubros')
-                .update({
-                    nombre,
-                    orden
-                })
-                .eq('id', editId);
-
-            if(error){
-                alert(error.message);
-                return;
-            }
-
-            cerrarModal();
-
-            await cargarRubros();
+        function iniciarEdicionRubro(rubro) {
+            editingRubroId = rubro.id;
+            document.getElementById('rubroNombre').value = rubro.nombre;
+            document.getElementById('rubroOrden').value = rubro.orden;
+            document.getElementById('formRubroTitulo').textContent = 'Editando: ' + rubro.nombre;
+            document.getElementById('btnGuardarRubro').textContent = 'Guardar cambios';
+            document.getElementById('btnCancelarEdicionRubro').style.display = 'inline-block';
         }
 
+        function cancelarEdicionRubro() {
+            editingRubroId = null;
+            document.getElementById('rubroNombre').value = '';
+            document.getElementById('rubroOrden').value = '0';
+            document.getElementById('formRubroTitulo').textContent = 'Nuevo rubro';
+            document.getElementById('btnGuardarRubro').textContent = 'Agregar';
+            document.getElementById('btnCancelarEdicionRubro').style.display = 'none';
+        }
 
-
-
-
-        async function crearRubro() {
+        async function guardarRubro() {
             const nombre = document.getElementById('rubroNombre').value.trim();
             const orden = Number(document.getElementById('rubroOrden').value) || 0;
 
@@ -759,15 +660,16 @@
                 return;
             }
 
-            const { error } = await supabaseClient.from('rubros').insert({ nombre, orden });
+            const { error } = editingRubroId
+                ? await supabaseClient.from('rubros').update({ nombre, orden }).eq('id', editingRubroId)
+                : await supabaseClient.from('rubros').insert({ nombre, orden });
 
             if (error) {
-                alert('No se pudo crear: ' + error.message);
+                alert('No se pudo guardar: ' + error.message);
                 return;
             }
 
-            document.getElementById('rubroNombre').value = '';
-            document.getElementById('rubroOrden').value = '0';
+            cancelarEdicionRubro();
             await cargarRubros();
         }
 
@@ -788,8 +690,6 @@
             renderTablaTamanios();
         }
 
-        
-
         function renderTablaTamanios() {
             document.getElementById('tablaTamanios').innerHTML = tamaniosCache.map(tamanio => `
                 <tr class="${tamanio.bcondicion ? '' : 'inactivo'}">
@@ -799,79 +699,37 @@
                             ${tamanio.bcondicion ? 'Activo' : 'Inactivo'}
                         </span>
                     </td>
-                   <td class="actions-cell">
-
-                        <button
-                            class="btn btn-sm"
-                            onclick="editarTamanio(${tamanio.id})">
-                            ✏️ Editar
+                    <td class="actions-cell">
+                        <button class="btn btn-sm btn-secondary" onclick="iniciarEdicionTamanio(tamaniosCache.find(t => t.id === ${tamanio.id}))">
+                            Modificar
                         </button>
-
-                        <button
-                            class="btn btn-sm btn-secondary"
-                            onclick="toggleCondicion('tamanios', ${tamanio.id}, ${!tamanio.bcondicion})">
+                        <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('tamanios', ${tamanio.id}, ${!tamanio.bcondicion}, cargarTamanios)">
                             ${tamanio.bcondicion ? 'Dar de baja' : 'Reactivar'}
                         </button>
-
                     </td>
                 </tr>
             `).join('') || '<tr><td colspan="3" class="load-msg">No hay tamaños cargados.</td></tr>';
         }
 
+        let editingTamanioId = null;
 
-        function editarTamanio(id){
-
-            const tamanio =
-                tamaniosCache.find(t => t.id == id);
-
-            editId = id;
-
-            abrirModal('Editar Tamaño', `
-
-                <div class="field">
-                    <label>Nombre</label>
-
-                    <input
-                        id="editNombre"
-                        value="${escapeHtml(tamanio.nombre)}">
-                </div>
-
-                <button
-                    class="btn"
-                    onclick="guardarTamanio()">
-                    Guardar
-                </button>
-
-            `);
+        function iniciarEdicionTamanio(tamanio) {
+            editingTamanioId = tamanio.id;
+            document.getElementById('tamanioNombre').value = tamanio.nombre;
+            document.getElementById('formTamanioTitulo').textContent = 'Editando: ' + tamanio.nombre;
+            document.getElementById('btnGuardarTamanio').textContent = 'Guardar cambios';
+            document.getElementById('btnCancelarEdicionTamanio').style.display = 'inline-block';
         }
 
-
-        async function guardarTamanio(){
-
-            const nombre =
-                document.getElementById('editNombre')
-                .value.trim();
-
-            const { error } =
-                await supabaseClient
-                .from('tamanios')
-                .update({
-                    nombre
-                })
-                .eq('id', editId);
-
-            if(error){
-                alert(error.message);
-                return;
-            }
-
-            cerrarModal();
-
-            await cargarTamanios();
+        function cancelarEdicionTamanio() {
+            editingTamanioId = null;
+            document.getElementById('tamanioNombre').value = '';
+            document.getElementById('formTamanioTitulo').textContent = 'Nuevo tamaño';
+            document.getElementById('btnGuardarTamanio').textContent = 'Agregar';
+            document.getElementById('btnCancelarEdicionTamanio').style.display = 'none';
         }
 
-
-        async function crearTamanio() {
+        async function guardarTamanio() {
             const nombre = document.getElementById('tamanioNombre').value.trim();
 
             if (!nombre) {
@@ -879,18 +737,36 @@
                 return;
             }
 
-            const { error } = await supabaseClient.from('tamanios').insert({ nombre });
+            const { error } = editingTamanioId
+                ? await supabaseClient.from('tamanios').update({ nombre }).eq('id', editingTamanioId)
+                : await supabaseClient.from('tamanios').insert({ nombre });
 
             if (error) {
-                alert('No se pudo crear: ' + error.message);
+                alert('No se pudo guardar: ' + error.message);
                 return;
             }
 
-            document.getElementById('tamanioNombre').value = '';
+            cancelarEdicionTamanio();
             await cargarTamanios();
         }
 
         /* ---------- Productos + precios/variantes ---------- */
+
+        async function cargarProductoPreciosParaSelect() {
+            const { data, error } = await supabaseClient
+                .from('producto_precios')
+                .select('id, precio, producto:productos ( nombre ), tamanio:tamanios ( nombre )')
+                .eq('bcondicion', true)
+                .order('id');
+
+            if (error) {
+                console.error(error);
+                productoPreciosCache = [];
+                return;
+            }
+
+            productoPreciosCache = data;
+        }
 
         async function cargarProductos() {
             const { data, error } = await supabaseClient
@@ -909,28 +785,26 @@
                 return;
             }
 
-            renderListaProductos(data);
+            productosCache = data;
+            renderListaProductos();
         }
 
-        function renderListaProductos(productos) {
+        function renderListaProductos() {
             const contenedor = document.getElementById('listaProductos');
 
-            if (productos.length === 0) {
+            if (productosCache.length === 0) {
                 contenedor.innerHTML = '<p class="load-msg">Todavía no hay productos cargados.</p>';
                 return;
             }
 
-            
-
-            
-            contenedor.innerHTML = productos.map(producto => `
+            contenedor.innerHTML = productosCache.map(producto => `
                 <div class="producto-row">
                     <div class="producto-header" onclick="toggleProducto(${producto.id})">
                         <span>
+                            ${producto.icono || ''}
                             <strong>${escapeHtml(producto.nombre)}</strong>
                             — ${escapeHtml(producto.rubro ? producto.rubro.nombre : 'Sin rubro')}
                         </span>
-                        
                         <span class="badge ${producto.bcondicion ? 'badge-activo' : 'badge-inactivo'}">
                             ${producto.bcondicion ? 'Activo' : 'Inactivo'}
                         </span>
@@ -938,18 +812,15 @@
 
                     <div class="producto-body" id="producto-body-${producto.id}">
                         <div class="form-row" style="margin-bottom:14px">
-                            <button class="btn btn-sm btn-secondary" onclick="editarProducto(${producto.id})">
-                                Modificar producto
+                            <button class="btn btn-sm btn-secondary" onclick="iniciarEdicionProducto(productosCache.find(p => p.id === ${producto.id}))">
+                                Modificar
                             </button>
-                            <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('productos', ${producto.id}, ${!producto.bcondicion})">
+                            <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('productos', ${producto.id}, ${!producto.bcondicion}, cargarProductos)">
                                 ${producto.bcondicion ? 'Dar de baja producto' : 'Reactivar producto'}
                             </button>
                         </div>
 
-                         ${renderImagenProducto(producto)}
-
                         <p><strong>Estado:</strong> ${escapeHtml(producto.estado)}</p>
-                        <p><strong>Orden:</strong> ${producto.orden}</p>
                         <p><strong>Descripción:</strong> ${escapeHtml(producto.descripcion || '—')}</p>
 
                         <h4 style="color:var(--brown)">Precios / variantes</h4>
@@ -976,9 +847,10 @@
                                             </span>
                                         </td>
                                         <td class="actions-cell">
-                                           
-                                           
-                                            <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('producto_precios', ${precio.id}, ${!precio.bcondicion})">
+                                            <button class="btn btn-sm btn-secondary" onclick="editarVariante(${precio.id}, ${precio.precio}, ${precio.stock === null ? 'null' : precio.stock})">
+                                                Editar precio/stock
+                                            </button>
+                                            <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('producto_precios', ${precio.id}, ${!precio.bcondicion}, cargarProductos)">
                                                 ${precio.bcondicion ? 'Baja' : 'Reactivar'}
                                             </button>
                                         </td>
@@ -1005,15 +877,6 @@
                                 <label>Stock (vacío = sin control)</label>
                                 <input type="number" id="nuevoStock-${producto.id}">
                             </div>
-                            <div class="field">
-                                <label>Archivo imagen</label>
-
-                                <input
-                                    type="text"
-                                    id="productoImagenArchivo-${producto.id}"
-                                    placeholder="latte.jpeg"
-                                    value="${escapeHtml(producto.imagen_archivo || '')}">
-                            </div>
                             <button class="btn btn-sm" onclick="agregarVariante(${producto.id})">
                                 Agregar variante
                             </button>
@@ -1023,276 +886,70 @@
             `).join('');
         }
 
-        function renderImagenProducto(producto) {
-            const imagen = getImagenProducto(producto);
-
-            if (!imagen) {
-                return `
-                    <div class="product-image-preview">
-                        <span>Sin imagen</span>
-                    </div>
-                `;
-            }
-
-            return `
-                <div class="product-image-preview">
-                    <img
-                        src="${escapeHtml(imagen)}"
-                        alt="${escapeHtml(producto.nombre)}"
-                        loading="lazy"
-                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                    >
-                    <span class="image-error" style="display:none">
-                        No se pudo cargar la imagen
-                    </span>
-                </div>
-            `;
-        }
-
-        const carpetasImagenesPorRubro = {
-            'Café': 'fotos/cafe',
-            'Pasteleria y Laminados': 'fotos/laminados',
-            'Salados': 'fotos/salados',
-            'Cookies': 'fotos/cookies',
-            'Adicionales': 'fotos/adicionales',
-            'Infusiones': 'fotos/infusiones'
-        };
-
-        function getImagenProducto(producto) {
-            const archivo = (producto.imagen_archivo || '').trim();
-
-            if (!archivo) {
-                return null;
-            }
-
-            const rubroNormalizado = normalizarTexto(
-                producto.rubro?.nombre || ''
-            );
-
-            const carpeta = carpetasImagenesPorRubro[rubroNormalizado];
-
-            if (!carpeta) {
-                console.warn(
-                    'No existe carpeta de imágenes configurada para el rubro:',
-                    producto.rubro?.nombre
-                );
-
-                return null;
-            }
-
-            const ruta = `${carpeta}/${archivo}`;
-
-            const { data } = supabaseClient.storage
-                .from('productos')
-                .getPublicUrl(ruta);
-
-            console.log('Imagen de producto:', {
-                producto: producto.nombre,
-                rubro: producto.rubro?.nombre,
-                carpeta,
-                archivo,
-                ruta,
-                publicUrl: data.publicUrl
-            });
-
-            return data.publicUrl;
-        }
-
-
-        async function guardarProducto(){
-
-            const nombre =
-                document.getElementById('editNombre')
-                .value.trim();
-
-            const rubro_id =
-                Number(
-                    document.getElementById('editRubro')
-                    .value
-                );
-
-            const estado =
-                document.getElementById('editEstado')
-                .value;
-
-            const orden =
-                Number(
-                    document.getElementById('editOrden')
-                    .value
-                ) || 0;
-
-            const descripcion =
-                document.getElementById('editDescripcion')
-                .value.trim();
-
-            const imagen_archivo =
-                document.getElementById('editImagenArchivo')
-                .value.trim();
-
-            const { error } =
-                await supabaseClient
-                .from('productos')
-                .update({
-                    nombre,
-                    rubro_id,
-                    estado,
-                    orden,
-                    descripcion,
-                    imagen_archivo
-                   
-                })
-                .eq('id', editId);
-
-            if(error){
-                alert('Error: ' + error.message);
-                return;
-            }
-
-            cerrarModal();
-
-            await cargarProductos();
-        }
-
         function toggleProducto(id) {
             document.getElementById('producto-body-' + id).classList.toggle('open');
         }
 
-        async function crearProducto() {
+        let editingProductoId = null;
+
+        function iniciarEdicionProducto(producto) {
+            editingProductoId = producto.id;
+
+            document.getElementById('productoNombre').value = producto.nombre;
+            document.getElementById('productoRubro').value = producto.rubro_id;
+            document.getElementById('productoIcono').value = producto.icono || '';
+            document.getElementById('productoEstado').value = producto.estado;
+            document.getElementById('productoOrden').value = producto.orden;
+            document.getElementById('productoDescripcion').value = producto.descripcion || '';
+
+            document.getElementById('formProductoTitulo').textContent = 'Editando: ' + producto.nombre;
+            document.getElementById('btnGuardarProducto').textContent = 'Guardar cambios';
+            document.getElementById('btnCancelarEdicionProducto').style.display = 'inline-block';
+
+            document.getElementById('panel-productos').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function cancelarEdicionProducto() {
+            editingProductoId = null;
+
+            document.getElementById('productoNombre').value = '';
+            document.getElementById('productoIcono').value = '';
+            document.getElementById('productoEstado').value = 'disponible';
+            document.getElementById('productoOrden').value = '0';
+            document.getElementById('productoDescripcion').value = '';
+
+            document.getElementById('formProductoTitulo').textContent = 'Nuevo producto';
+            document.getElementById('btnGuardarProducto').textContent = 'Agregar producto';
+            document.getElementById('btnCancelarEdicionProducto').style.display = 'none';
+        }
+
+        async function guardarProducto() {
             const nombre = document.getElementById('productoNombre').value.trim();
             const rubro_id = document.getElementById('productoRubro').value;
+            const icono = document.getElementById('productoIcono').value.trim() || '🍽️';
             const estado = document.getElementById('productoEstado').value;
             const orden = Number(document.getElementById('productoOrden').value) || 0;
             const descripcion = document.getElementById('productoDescripcion').value.trim();
-            const imagen_archivo = document.getElementById('productoImagenArchivo').value.trim();
 
             if (!nombre || !rubro_id) {
                 alert('Completá al menos el nombre y el rubro.');
                 return;
             }
 
-            const { error } = await supabaseClient.from('productos').insert({
-                nombre, rubro_id, estado, orden, descripcion, imagen_archivo
-            });
+            const payload = { nombre, rubro_id, icono, estado, orden, descripcion };
+
+            const { error } = editingProductoId
+                ? await supabaseClient.from('productos').update(payload).eq('id', editingProductoId)
+                : await supabaseClient.from('productos').insert(payload);
 
             if (error) {
-                alert('No se pudo crear el producto: ' + error.message);
+                alert('No se pudo guardar: ' + error.message);
                 return;
             }
 
-            document.getElementById('productoNombre').value = '';
-            document.getElementById('productoDescripcion').value = '';
-            document.getElementById('productoOrden').value = '0';
-            document.getElementById('productoImagenArchivo').value = '';
-           
+            cancelarEdicionProducto();
             await cargarProductos();
         }
-
-       async function editarProducto(productoId){
-
-            const { data: producto, error } =
-                await supabaseClient
-                .from('productos')
-                .select('*')
-                .eq('id', productoId)
-                .single();
-
-            if(error){
-                alert(error.message);
-                return;
-            }
-
-            editId = productoId;
-
-            abrirModal('Editar Producto',`
-
-                <div class="field">
-                    <label>Nombre</label>
-                    <input
-                        id="editNombre"
-                        value="${escapeHtml(producto.nombre)}">
-                </div>
-
-                <div class="field">
-                    <label>Rubro</label>
-
-                    <select id="editRubro">
-
-                        ${rubrosCache
-                            .filter(r => r.bcondicion)
-                            .map(r => `
-                                <option
-                                    value="${r.id}"
-                                    ${Number(r.id) === Number(producto.rubro_id) ? 'selected' : ''}>
-                                    ${escapeHtml(r.nombre)}
-                                </option>
-                            `).join('')}
-
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Estado</label>
-
-                    <select id="editEstado">
-
-                        <option value="disponible"
-                            ${producto.estado==='disponible'?'selected':''}>
-                            Disponible
-                        </option>
-
-                        <option value="consultar"
-                            ${producto.estado==='consultar'?'selected':''}>
-                            Consultar
-                        </option>
-
-                        <option value="pendiente"
-                            ${producto.estado==='pendiente'?'selected':''}>
-                            Pendiente
-                        </option>
-
-                        <option value="sin_stock"
-                            ${producto.estado==='sin_stock'?'selected':''}>
-                            Sin stock
-                        </option>
-
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Orden</label>
-
-                    <input
-                        type="number"
-                        id="editOrden"
-                        value="${producto.orden || 0}">
-                </div>
-
-                
-
-                <div class="field">
-                    <label>Descripción</label>
-
-                    <textarea
-                        id="editDescripcion">${escapeHtml(producto.descripcion || '')}</textarea>
-                </div>
-
-                <div class="field">
-                    <label>Archivo imagen</label>
-
-                    <input
-                        id="editImagenArchivo"
-                        value="${escapeHtml(producto.imagen_archivo || '')}">
-                </div>
-
-                <button
-                    class="btn"
-                    onclick="guardarProducto()">
-                    Guardar cambios
-                </button>
-
-            `);
-        }
-
 
         async function agregarVariante(productoId) {
             const tamanioId = document.getElementById('nuevoTamanio-' + productoId).value || null;
@@ -1318,73 +975,242 @@
             }
 
             await cargarProductos();
+            await cargarProductoPreciosParaSelect();
             document.getElementById('producto-body-' + productoId)?.classList.add('open');
         }
 
-        async function editarVariante(precioId, tamanioActual, precioActual, stockActual) {
-            const precioRaw = prompt('Precio:', precioActual);
-            if (precioRaw === null) return;
-            const precio = Number(precioRaw);
-            if (!Number.isFinite(precio) || precio <= 0) {
-                alert('Ingresá un precio válido.');
+        async function editarVariante(precioId, precioActual, stockActual) {
+            const nuevoPrecioRaw = prompt('Nuevo precio:', precioActual);
+            if (nuevoPrecioRaw === null) return;
+
+            const nuevoPrecio = Number(nuevoPrecioRaw);
+            if (!nuevoPrecio || nuevoPrecio <= 0) {
+                alert('Precio inválido.');
                 return;
             }
 
-            const stockRaw = prompt('Stock (vacío = sin control):', stockActual === null ? '' : stockActual);
-            if (stockRaw === null) return;
-            const stock = stockRaw.trim() === '' ? null : Number(stockRaw);
-            if (stock !== null && (!Number.isFinite(stock) || stock < 0)) {
-                alert('Ingresá un stock válido.');
-                return;
-            }
+            const nuevoStockRaw = prompt(
+                'Nuevo stock (dejar vacío para "sin control"):',
+                stockActual === null ? '' : stockActual
+            );
+            if (nuevoStockRaw === null) return;
 
-            const tamanioRaw = prompt('ID del tamaño (vacío = Único):', tamanioActual === null ? '' : tamanioActual);
-            if (tamanioRaw === null) return;
-            const tamanio_id = tamanioRaw.trim() === '' ? null : Number(tamanioRaw);
-            if (tamanio_id !== null && !tamaniosCache.some(t => Number(t.id) === tamanio_id && t.bcondicion)) {
-                alert('El ID de tamaño no es válido.');
-                return;
-            }
+            const nuevoStock = nuevoStockRaw.trim() === '' ? null : Number(nuevoStockRaw);
 
             const { error } = await supabaseClient
                 .from('producto_precios')
-                .update({ precio, stock, tamanio_id })
+                .update({ precio: nuevoPrecio, stock: nuevoStock })
                 .eq('id', precioId);
 
             if (error) {
-                alert('No se pudo actualizar la variante: ' + error.message);
+                alert('No se pudo actualizar: ' + error.message);
                 return;
             }
 
             await cargarProductos();
+            await cargarProductoPreciosParaSelect();
         }
 
-        async function cargarImagenesStorage() {
-            const { data, error } = await supabaseClient.storage
-                .from(STORAGE_BUCKET)
-                .list(STORAGE_FOLDER, { limit: 100, sortBy: { column: 'name', order: 'asc' } });
+        /* ---------- Promociones ---------- */
+
+        async function cargarPromociones() {
+            const { data, error } = await supabaseClient
+                .from('promociones')
+                .select(`
+                    *,
+                    items:promocion_items (
+                        id, cantidad,
+                        producto_precio: producto_precios ( id, precio, producto:productos ( nombre ), tamanio:tamanios ( nombre ) )
+                    )
+                `)
+                .order('id', { ascending: false });
 
             if (error) {
-                console.warn('No se pudieron cargar imágenes desde Storage:', error.message);
+                console.error(error);
+                document.getElementById('listaPromociones').innerHTML =
+                    '<p class="load-msg">No se pudieron cargar las promociones.</p>';
                 return;
             }
 
-            imagenesCache = (data || []).filter(item => item.name && !item.id?.endsWith('/'));
-            const select = document.getElementById('productoImagen');
-            if (!select) return;
-
-            select.innerHTML = '<option value="">Sin imagen</option>' + imagenesCache.map(item => {
-                const path = STORAGE_FOLDER ? STORAGE_FOLDER + '/' + item.name : item.name;
-                const { data: publicData } = supabaseClient.storage
-                    .from(STORAGE_BUCKET)
-                    .getPublicUrl(path);
-                return `<option value="${escapeHtml(publicData.publicUrl)}">${escapeHtml(item.name)}</option>`;
-            }).join('');
+            promocionesCache = data;
+            renderListaPromociones();
         }
 
-                /* ---------- Alta/baja genérica ---------- */
+        function renderListaPromociones() {
+            const contenedor = document.getElementById('listaPromociones');
 
-        async function toggleCondicion(tabla, id, nuevoValor) {
+            if (promocionesCache.length === 0) {
+                contenedor.innerHTML = '<p class="load-msg">Todavía no hay promociones cargadas.</p>';
+                return;
+            }
+
+            contenedor.innerHTML = promocionesCache.map(promo => `
+                <div class="producto-row">
+                    <div class="producto-header" onclick="togglePromo(${promo.id})">
+                        <span><strong>${escapeHtml(promo.nombre)}</strong> — $${promo.precio}</span>
+                        <span class="badge ${promo.bcondicion ? 'badge-activo' : 'badge-inactivo'}">
+                            ${promo.bcondicion ? 'Activa' : 'Inactiva'}
+                        </span>
+                    </div>
+
+                    <div class="producto-body" id="promo-body-${promo.id}">
+                        <div class="form-row" style="margin-bottom:14px">
+                            <button class="btn btn-sm btn-secondary" onclick="iniciarEdicionPromo(promocionesCache.find(p => p.id === ${promo.id}))">
+                                Modificar
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="toggleCondicion('promociones', ${promo.id}, ${!promo.bcondicion}, cargarPromociones)">
+                                ${promo.bcondicion ? 'Dar de baja' : 'Reactivar'}
+                            </button>
+                        </div>
+
+                        <p><strong>Descripción:</strong> ${escapeHtml(promo.descripcion || '—')}</p>
+                        <p><strong>Vigencia:</strong> ${promo.fecha_desde || 'sin inicio'} a ${promo.fecha_hasta || 'sin fin'}</p>
+
+                        <h4 style="color:var(--brown)">Productos que incluye</h4>
+
+                        <table>
+                            <thead>
+                                <tr><th>Producto</th><th>Cantidad</th><th>Acciones</th></tr>
+                            </thead>
+                            <tbody>
+                                ${(promo.items || []).map(item => `
+                                    <tr>
+                                        <td>${escapeHtml(item.producto_precio.producto.nombre)}${item.producto_precio.tamanio ? ' - ' + escapeHtml(item.producto_precio.tamanio.nombre) : ''}</td>
+                                        <td>${item.cantidad}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" onclick="quitarItemPromo(${item.id}, ${promo.id})">Quitar</button>
+                                        </td>
+                                    </tr>
+                                `).join('') || '<tr><td colspan="3">Sin productos asignados.</td></tr>'}
+                            </tbody>
+                        </table>
+
+                        <div class="form-row" style="margin-top:14px">
+                            <div class="field">
+                                <label>Producto</label>
+                                <select id="nuevoItemProducto-${promo.id}">
+                                    ${productoPreciosCache.map(pp => `
+                                        <option value="${pp.id}">
+                                            ${escapeHtml(pp.producto.nombre)}${pp.tamanio ? ' - ' + escapeHtml(pp.tamanio.nombre) : ''} ($${pp.precio})
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Cantidad</label>
+                                <input type="number" id="nuevoItemCantidad-${promo.id}" value="1" min="1">
+                            </div>
+                            <button class="btn btn-sm" onclick="agregarItemPromo(${promo.id})">Agregar producto</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function togglePromo(id) {
+            document.getElementById('promo-body-' + id).classList.toggle('open');
+        }
+
+        let editingPromoId = null;
+
+        function iniciarEdicionPromo(promo) {
+            editingPromoId = promo.id;
+
+            document.getElementById('promoNombre').value = promo.nombre;
+            document.getElementById('promoDescripcion').value = promo.descripcion || '';
+            document.getElementById('promoPrecio').value = promo.precio;
+            document.getElementById('promoFechaDesde').value = promo.fecha_desde || '';
+            document.getElementById('promoFechaHasta').value = promo.fecha_hasta || '';
+
+            document.getElementById('formPromoTitulo').textContent = 'Editando: ' + promo.nombre;
+            document.getElementById('btnGuardarPromo').textContent = 'Guardar cambios';
+            document.getElementById('btnCancelarEdicionPromo').style.display = 'inline-block';
+
+            document.getElementById('panel-promociones').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function cancelarEdicionPromo() {
+            editingPromoId = null;
+
+            document.getElementById('promoNombre').value = '';
+            document.getElementById('promoDescripcion').value = '';
+            document.getElementById('promoPrecio').value = '';
+            document.getElementById('promoFechaDesde').value = '';
+            document.getElementById('promoFechaHasta').value = '';
+
+            document.getElementById('formPromoTitulo').textContent = 'Nueva promoción';
+            document.getElementById('btnGuardarPromo').textContent = 'Crear promoción';
+            document.getElementById('btnCancelarEdicionPromo').style.display = 'none';
+        }
+
+        async function guardarPromo() {
+            const nombre = document.getElementById('promoNombre').value.trim();
+            const descripcion = document.getElementById('promoDescripcion').value.trim();
+            const precio = Number(document.getElementById('promoPrecio').value);
+            const fecha_desde = document.getElementById('promoFechaDesde').value || null;
+            const fecha_hasta = document.getElementById('promoFechaHasta').value || null;
+
+            if (!nombre || !precio || precio <= 0) {
+                alert('Completá al menos el nombre y un precio válido.');
+                return;
+            }
+
+            const payload = { nombre, descripcion, precio, fecha_desde, fecha_hasta };
+
+            const { error } = editingPromoId
+                ? await supabaseClient.from('promociones').update(payload).eq('id', editingPromoId)
+                : await supabaseClient.from('promociones').insert(payload);
+
+            if (error) {
+                alert('No se pudo guardar: ' + error.message);
+                return;
+            }
+
+            cancelarEdicionPromo();
+            await cargarPromociones();
+        }
+
+        async function agregarItemPromo(promoId) {
+            const producto_precio_id = document.getElementById('nuevoItemProducto-' + promoId).value;
+            const cantidad = Number(document.getElementById('nuevoItemCantidad-' + promoId).value) || 1;
+
+            if (!producto_precio_id) {
+                alert('No hay productos con precio activo para agregar. Cargá primero un producto con su precio.');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('promocion_items').insert({
+                promocion_id: promoId,
+                producto_precio_id,
+                cantidad
+            });
+
+            if (error) {
+                alert('No se pudo agregar: ' + error.message);
+                return;
+            }
+
+            await cargarPromociones();
+            document.getElementById('promo-body-' + promoId)?.classList.add('open');
+        }
+
+        async function quitarItemPromo(itemId, promoId) {
+            if (!confirm('¿Quitar este producto de la promoción?')) return;
+
+            const { error } = await supabaseClient.from('promocion_items').delete().eq('id', itemId);
+
+            if (error) {
+                alert('No se pudo quitar: ' + error.message);
+                return;
+            }
+
+            await cargarPromociones();
+            document.getElementById('promo-body-' + promoId)?.classList.add('open');
+        }
+
+        /* ---------- Alta/baja genérica ---------- */
+
+        async function toggleCondicion(tabla, id, nuevoValor, recargar) {
             const { error } = await supabaseClient
                 .from(tabla)
                 .update({ bcondicion: nuevoValor })
@@ -1395,9 +1221,9 @@
                 return;
             }
 
-            if (tabla === 'rubros') await cargarRubros();
-            if (tabla === 'tamanios') await cargarTamanios();
-            if (tabla === 'productos' || tabla === 'producto_precios') await cargarProductos();
+            if (typeof recargar === 'function') {
+                await recargar();
+            }
         }
 
         /* ---------- Utilidades ---------- */
@@ -1408,22 +1234,10 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+                .replace(/'/g, '&#039;');
         }
 
         checkSesionInicial();
-
-   
-        function normalizarTexto(texto) {
-            return String(texto || '')
-                .trim()
-                .toLowerCase()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '');
-        }
-        
     </script>
 </body>
 
