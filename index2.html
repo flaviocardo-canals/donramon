@@ -1104,7 +1104,7 @@
 
             <div class="shop-status">
                 <span class="shop-status-dot"></span>
-                <span>Horarios: martes a sábados 7–13 y 16–19 · domingos 8–13</span>
+                <span>Horarios: martes a sábados 7-13 y 16-19 · domingos 8-13</span>
             </div>
 
             <p class="availability-badge" id="availabilityBadge"></p>
@@ -1129,18 +1129,70 @@
             <span>👋 ¿Repetimos tu pedido de la última vez?</span>
             <div class="repeat-banner-actions">
                 <button type="button" class="repeat-banner-btn" onclick="repeatLastOrder()">Repetir pedido</button>
-                <button type="button" class="repeat-banner-dismiss" onclick="dismissRepeatBanner()" aria-label="Cerrar aviso">×</button>
+                <button type="button" class="repeat-banner-dismiss" onclick="dismissRepeatBanner()" aria-label="Cerrar aviso">x</button>
             </div>
         </div>
 
-        <section class="featured-section" id="featuredSection" aria-labelledby="featured-title" style="display:none">
+        <section class="featured-section" aria-labelledby="featured-title">
             <div class="featured-heading">
-                <span class="featured-kicker">✨ Promos del día</span>
+                <span class="featured-kicker">✨ Recomendados del día</span>
                 <h2 id="featured-title">Combinaciones para disfrutar</h2>
-                <p>Sumá una promo entera al pedido con un solo click.</p>
+                <p>Elegí una opción y encontrá rápidamente productos para tu merienda.</p>
             </div>
 
-            <div class="featured-grid" id="featuredGrid"></div>
+            <div class="featured-grid">
+                <article class="featured">
+                    <div class="featured-content">
+                        <span class="featured-label">Café + cookie</span>
+                        <h3>Combo 1</h3>
+
+                        <p>
+                            Elegí un café y acompañalo con una cookie artesanal
+                            para disfrutar una pausa rica.
+                        </p>
+
+                        <div class="featured-price">Desde $7.500</div>
+
+                        <div class="featured-actions">
+                            <button type="button" class="featured-button" onclick="goToCategory('Café')">
+                                Elegir café
+                            </button>
+
+                            <button type="button" class="featured-button secondary" onclick="searchProduct('Cookies')">
+                                Elegir cookie
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="featured-icon" aria-hidden="true">☕🍪</div>
+                </article>
+
+                <article class="featured featured-budin">
+                    <div class="featured-content">
+                        <span class="featured-label">Café + budín</span>
+                        <h3>Combo 2</h3>
+
+                        <p>
+                            Disfrutá un café a elección junto con una porción
+                            de budín artesanal del día.
+                        </p>
+
+                        <div class="featured-price">Desde $7.600</div>
+
+                        <div class="featured-actions">
+                            <button type="button" class="featured-button" onclick="goToCategory('Café')">
+                                Elegir café
+                            </button>
+
+                            <button type="button" class="featured-button secondary" onclick="searchProduct('budín')">
+                                Ver budín
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="featured-icon" aria-hidden="true">☕🍰</div>
+                </article>
+            </div>
         </section>
 
         <div class="quick-filters" aria-label="Filtros rápidos">
@@ -1379,11 +1431,7 @@
                     id, nombre, descripcion, precio, bcondicion, fecha_desde, fecha_hasta,
                     items:promocion_items (
                         id, cantidad,
-                        producto_precio: producto_precios (
-                            id, precio,
-                            producto: productos ( nombre ),
-                            tamanio: tamanios ( nombre )
-                        )
+                        producto_precio: producto_precios ( id, precio )
                     )
                 `)
                 .eq('bcondicion', true);
@@ -1619,82 +1667,6 @@
                 ahorroTotal,
                 promosAplicadas
             };
-        }
-
-        function renderFeaturedPromos() {
-            const section = document.getElementById('featuredSection');
-            const container = document.getElementById('featuredGrid');
-            if (!section || !container) return;
-
-            if (promosVigentes.length === 0) {
-                section.style.display = 'none';
-                container.innerHTML = '';
-                return;
-            }
-
-            section.style.display = '';
-
-            container.innerHTML = promosVigentes.map(promo => {
-                const detalle = (promo.items || [])
-                    .map(item => {
-                        const cantidadTexto = item.cantidad > 1 ? item.cantidad + 'x ' : '';
-                        const variantTexto = item.producto_precio.tamanio ? ' (' + item.producto_precio.tamanio.nombre + ')' : '';
-                        return `${cantidadTexto}${item.producto_precio.producto.nombre}${variantTexto}`;
-                    })
-                    .join(' + ');
-
-                return `
-                    <article class="featured">
-                        <div class="featured-content">
-                            <span class="featured-label">${escapeHtml(detalle)}</span>
-                            <h3>${escapeHtml(promo.nombre)}</h3>
-
-                            <p>${escapeHtml(promo.descripcion || '')}</p>
-
-                            <div class="featured-price">$${money(promo.precio)}</div>
-
-                            <div class="featured-actions">
-                                <button type="button" class="featured-button" onclick="addPromoToCart(${promo.id})">
-                                    Agregar al pedido
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="featured-icon" aria-hidden="true">🎉</div>
-                    </article>
-                `;
-            }).join('');
-        }
-
-        function addPromoToCart(promoId) {
-            const promo = promosVigentes.find(p => p.id === promoId);
-            if (!promo || !promo.items || promo.items.length === 0) return;
-
-            promo.items.forEach(item => {
-                const existente = order.find(entry => entry.precioId === item.producto_precio.id);
-
-                if (existente) {
-                    existente.quantity += item.cantidad;
-                } else {
-                    order.push({
-                        name: item.producto_precio.producto.nombre,
-                        category: '',
-                        variant: item.producto_precio.tamanio ? item.producto_precio.tamanio.nombre : null,
-                        price: item.producto_precio.precio,
-                        quantity: item.cantidad,
-                        status: 'Disponible',
-                        precioId: item.producto_precio.id
-                    });
-                }
-            });
-
-            update();
-            syncCardControls();
-
-            document.getElementById('drawer').classList.add('open');
-            setFabHidden(true);
-
-            showToast(`🎉 ${promo.nombre} agregada al pedido`);
         }
 
         /* ---------- Controles de cantidad en la card ---------- */
@@ -2493,7 +2465,6 @@
 
         async function init() {
             await refreshMenu();
-            renderFeaturedPromos();
 
             const categoriasUnicas = [...new Set(items.map(item => item[1]))];
             categoriasUnicas.sort((a, b) => (rubroOrderMap.get(a) ?? 999) - (rubroOrderMap.get(b) ?? 999));
