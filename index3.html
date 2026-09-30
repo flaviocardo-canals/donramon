@@ -668,141 +668,6 @@
             font-size: 12px;
         }
 
-        /* Selector Lista / Fotos */
-        .view-toggle {
-            display: flex;
-            gap: 6px;
-            margin: 0 0 14px;
-        }
-
-        .view-toggle-btn {
-            padding: 8px 12px;
-            border: 1px solid var(--brown);
-            border-radius: 999px;
-            background: transparent;
-            color: var(--brown);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .view-toggle-btn.active,
-        .view-toggle-btn:hover {
-            background: var(--brown);
-            color: white;
-        }
-
-        /* Vista lista, agrupada por rubro */
-        .lista-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 26px;
-        }
-
-        .list-group-title {
-            margin: 0 0 8px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid var(--gold);
-            color: var(--brown);
-            font-family: "Playfair Display", Georgia, serif;
-            font-size: 21px;
-        }
-
-        .list-group-body {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .list-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 6px 16px;
-            padding: 10px 2px;
-            border-bottom: 1px solid #ead8c5;
-        }
-
-        .list-row:last-child {
-            border-bottom: 0;
-        }
-
-        .list-row-disabled {
-            opacity: .55;
-        }
-
-        .list-row-main {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            min-width: 160px;
-        }
-
-        .list-row-name {
-            color: var(--ink);
-            font-weight: bold;
-            font-size: 15px;
-        }
-
-        .list-row-status {
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-size: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: .03em;
-        }
-
-        .list-variant-columns {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .list-variant-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            min-width: 58px;
-        }
-
-        .list-variant-name {
-            color: #88654c;
-            font-size: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: .03em;
-        }
-
-        .list-price-btn {
-            padding: 5px 11px;
-            border: 1px solid var(--brown);
-            border-radius: 999px;
-            background: white;
-            color: var(--brown);
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-
-        .list-price-btn:hover {
-            background: var(--brown);
-            color: white;
-        }
-
-        .list-price-soldout {
-            color: #b0a696;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .quantity-controls-sm {
-            transform: scale(.88);
-        }
-
         .drawer {
             position: fixed;
             right: 18px;
@@ -1290,18 +1155,11 @@
 
         <nav class="tabs" id="tabs" aria-label="Categorías de productos"></nav>
 
-        <div class="view-toggle" role="tablist" aria-label="Forma de ver el menú">
-            <button type="button" class="view-toggle-btn active" data-view="lista" onclick="selectView('lista', this)">📋 Lista</button>
-            <button type="button" class="view-toggle-btn" data-view="fotos" onclick="selectView('fotos', this)">📷 Fotos</button>
-        </div>
-
         <p class="result-count" id="resultCount"></p>
 
-        <div class="lista-menu" id="listaMenu">
+        <section class="grid" id="grid" aria-live="polite">
             <p class="load-state">Cargando el menú…</p>
-        </div>
-
-        <section class="grid" id="grid" aria-live="polite" style="display:none"></section>
+        </section>
 
         <section class="footer-info">
             <div class="footer-location">
@@ -1332,7 +1190,6 @@
         </section>
     </div>
 
-    <footer>Don Ramón Pâtisserie · Menú digital</footer>
 
     <aside class="drawer" id="drawer" aria-label="Tu pedido">
         <div class="drawer-sticky-header">
@@ -1434,9 +1291,6 @@
         let toastTimer;
         let searchDebounceTimer;
 
-        // vistaActual: 'lista' (agrupado por rubro, sin fotos) o 'fotos' (grilla de tarjetas)
-        let vistaActual = 'lista';
-
         const money = value => new Intl.NumberFormat('es-AR').format(value);
 
         function escapeHtml(value) {
@@ -1446,10 +1300,6 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
-        }
-
-        function escapeJsString(value) {
-            return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         }
 
         /* ---------- Carga del menú desde Supabase ---------- */
@@ -1701,7 +1551,8 @@
 
                 if (error) {
                     await refreshMenu();
-                    renderVistaActual();
+                    render();
+                    syncCardControls();
 
                     return {
                         ok: false,
@@ -1711,7 +1562,8 @@
             }
 
             await refreshMenu();
-            renderVistaActual();
+            render();
+            syncCardControls();
 
             return { ok: true };
         }
@@ -1836,7 +1688,7 @@
             });
 
             update();
-            syncVistaActual();
+            syncCardControls();
 
             document.getElementById('drawer').classList.add('open');
             setFabHidden(true);
@@ -2039,198 +1891,6 @@
                 : `${filteredItems.length} ${filteredItems.length === 1 ? 'resultado' : 'resultados'}`;
 
             applyPhotos();
-        }
-
-        /* ---------- Vista lista (agrupada por rubro) ---------- */
-
-        function getListQuantityControlsHtml(item, itemIndex, variantName, price, remaining) {
-            const qty = getQuantityInCart(item[0], variantName);
-            const canIncrease = canAddOneMore(item[0], variantName);
-            const variantArg = escapeJsString(variantName || '');
-
-            if (qty > 0) {
-                return `
-                    <div class="quantity-controls quantity-controls-sm" aria-label="Cantidad de ${escapeHtml(item[0])}">
-                        <button type="button" onclick="listDecrease(${itemIndex}, '${variantArg}')">−</button>
-                        <span class="quantity-value">${qty}</span>
-                        <button type="button" ${canIncrease ? '' : 'disabled'} onclick="listIncrease(${itemIndex}, '${variantArg}')">+</button>
-                    </div>
-                `;
-            }
-
-            return `
-                <button type="button" class="list-price-btn" onclick="listIncrease(${itemIndex}, '${variantArg}')">
-                    $${money(price)}
-                </button>
-            `;
-        }
-
-        function renderLista() {
-            const query = document.getElementById('search').value.trim().toLowerCase();
-
-            let filteredItems = items.filter(item => {
-                const belongsToCategory = cat === 'Todas' || item[1] === cat;
-                const matchesSearch = item[0].toLowerCase().includes(query);
-
-                return belongsToCategory && matchesSearch && matchesQuickFilter(item);
-            });
-
-            if (document.getElementById('sort').value === 'price') {
-                filteredItems = [...filteredItems].sort(
-                    (a, b) => getMinPrice(a) - getMinPrice(b)
-                );
-            }
-
-            const gruposMap = new Map();
-            filteredItems.forEach(item => {
-                const rubro = item[1];
-                if (!gruposMap.has(rubro)) gruposMap.set(rubro, []);
-                gruposMap.get(rubro).push(item);
-            });
-
-            const rubrosOrdenados = [...gruposMap.keys()].sort(
-                (a, b) => (rubroOrderMap.get(a) ?? 999) - (rubroOrderMap.get(b) ?? 999)
-            );
-
-            const html = rubrosOrdenados.map(rubro => {
-                const filas = gruposMap.get(rubro).map(item => {
-                    const itemIndex = items.indexOf(item);
-                    const remainingStockUnico = getRemainingStock(item[0], null);
-                    const variants = getVariants(item);
-
-                    const agotadoPorStock = variants.length === 0 && remainingStockUnico === 0;
-                    const isOutOfStock = item[5] === 'SIN STOCK' || item[5] === 'PENDIENTE' || agotadoPorStock;
-                    const mostrarComoSinStock = item[5] === 'SIN STOCK' || agotadoPorStock;
-
-                    let columnasHtml;
-
-                    if (variants.length > 0) {
-                        columnasHtml = `
-                            <div class="list-variant-columns">
-                                ${variants.map(variant => {
-                                    const remaining = getRemainingStock(item[0], variant.name);
-                                    const variantSoldOut = remaining === 0;
-
-                                    return `
-                                        <div class="list-variant-col">
-                                            <span class="list-variant-name">${escapeHtml(variant.name)}</span>
-                                            ${isOutOfStock || variantSoldOut
-                                                ? `<span class="list-price-soldout">—</span>`
-                                                : getListQuantityControlsHtml(item, itemIndex, variant.name, variant.price, remaining)
-                                            }
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        `;
-                    } else {
-                        columnasHtml = isOutOfStock
-                            ? `<span class="list-price-soldout">Sin stock</span>`
-                            : getListQuantityControlsHtml(item, itemIndex, null, Number(item[3]), remainingStockUnico);
-                    }
-
-                    return `
-                        <div class="list-row ${isOutOfStock ? 'list-row-disabled' : ''}">
-                            <div class="list-row-main">
-                                <span class="list-row-name">${escapeHtml(item[0])}</span>
-                                ${item[5] !== 'Disponible' ? `
-                                    <span class="list-row-status ${mostrarComoSinStock ? 'status-sin-stock' : getStatusClass(item[5])}">
-                                        ${mostrarComoSinStock && item[5] !== 'SIN STOCK' ? 'SIN STOCK' : escapeHtml(item[5])}
-                                    </span>
-                                ` : ''}
-                            </div>
-                            ${columnasHtml}
-                        </div>
-                    `;
-                }).join('');
-
-                return `
-                    <div class="list-group">
-                        <h3 class="list-group-title">${escapeHtml(rubro)}</h3>
-                        <div class="list-group-body">${filas}</div>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('listaMenu').innerHTML =
-                html || '<p class="empty">No encontramos productos con ese criterio.</p>';
-
-            const resultCountEl = document.getElementById('resultCount');
-            resultCountEl.textContent = filteredItems.length === items.length
-                ? `${filteredItems.length} productos en el menú`
-                : `${filteredItems.length} ${filteredItems.length === 1 ? 'resultado' : 'resultados'}`;
-        }
-
-        function listIncrease(itemIndex, variantNameRaw) {
-            const variantName = variantNameRaw === '' ? null : variantNameRaw;
-            const item = items[itemIndex];
-
-            if (!canAddOneMore(item[0], variantName)) {
-                showToast(`No queda más stock disponible de "${item[0]}"`);
-                return;
-            }
-
-            const eraNuevo = getQuantityInCart(item[0], variantName) === 0;
-
-            let price;
-            if (variantName === null) {
-                price = Number(item[3]);
-            } else {
-                const variant = getVariants(item).find(v => v.name === variantName);
-                price = variant ? variant.price : Number(item[3]);
-            }
-
-            if (eraNuevo && item[5] === 'Consultar') {
-                alert(`"${item[0]}" se agrega como pedido sujeto a confirmación de disponibilidad.`);
-            }
-
-            addItem(item, variantName, price, { openDrawer: false, notify: true });
-            syncVistaActual();
-        }
-
-        function listDecrease(itemIndex, variantNameRaw) {
-            const variantName = variantNameRaw === '' ? null : variantNameRaw;
-            const item = items[itemIndex];
-            const orderIndex = order.findIndex(entry => entry.name === item[0] && entry.variant === variantName);
-
-            if (orderIndex === -1) return;
-
-            if (order[orderIndex].quantity > 1) {
-                order[orderIndex].quantity -= 1;
-            } else {
-                order.splice(orderIndex, 1);
-            }
-
-            update();
-            syncVistaActual();
-        }
-
-        function selectView(view, button) {
-            vistaActual = view;
-
-            document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-
-            document.getElementById('grid').style.display = view === 'fotos' ? '' : 'none';
-            document.getElementById('listaMenu').style.display = view === 'lista' ? '' : 'none';
-
-            renderVistaActual();
-        }
-
-        function renderVistaActual() {
-            if (vistaActual === 'fotos') {
-                render();
-            } else {
-                renderLista();
-            }
-        }
-
-        function syncVistaActual() {
-            if (vistaActual === 'fotos') {
-                syncCardControls();
-            } else {
-                renderLista();
-            }
         }
 
         function startAdd(index) {
@@ -2451,7 +2111,7 @@
 
             entry.quantity += 1;
             update();
-            syncVistaActual();
+            syncCardControls();
         }
 
         function decreaseQuantity(index) {
@@ -2462,13 +2122,13 @@
             }
 
             update();
-            syncVistaActual();
+            syncCardControls();
         }
 
         function removeItem(index) {
             order.splice(index, 1);
             update();
-            syncVistaActual();
+            syncCardControls();
         }
 
         function toggleCart() {
@@ -2480,7 +2140,8 @@
 
             if (opening) {
                 refreshMenu().then(() => {
-                    renderVistaActual();
+                    render();
+                    syncCardControls();
                     update();
                 });
             }
@@ -2548,7 +2209,7 @@
             }
 
             update();
-            syncVistaActual();
+            syncCardControls();
             dismissRepeatBanner();
 
             document.getElementById('drawer').classList.add('open');
@@ -2711,7 +2372,7 @@
             }
 
             document.getElementById('search').value = '';
-            renderVistaActual();
+            render();
         }
 
         function goToCategory(category) {
@@ -2728,7 +2389,7 @@
             });
 
             updateCategoryTabs();
-            renderVistaActual();
+            render();
 
             document.getElementById('grid').scrollIntoView({
                 behavior: 'smooth',
@@ -2750,7 +2411,7 @@
             });
 
             updateCategoryTabs();
-            renderVistaActual();
+            render();
 
             document.getElementById('grid').scrollIntoView({
                 behavior: 'smooth',
@@ -2817,7 +2478,7 @@
             });
 
             updateCategoryTabs();
-            renderVistaActual();
+            render();
         }
 
         function updateCategoryTabs() {
@@ -2853,10 +2514,10 @@
 
             document.getElementById('search').addEventListener('input', () => {
                 clearTimeout(searchDebounceTimer);
-                searchDebounceTimer = setTimeout(renderVistaActual, 220);
+                searchDebounceTimer = setTimeout(render, 220);
             });
 
-            document.getElementById('sort').addEventListener('change', renderVistaActual);
+            document.getElementById('sort').addEventListener('change', render);
 
             const savedName = (() => {
                 try {
@@ -2892,7 +2553,7 @@
                 ? `🍽️ ${availabilityPercent}% del menú disponible hoy (${availableCount} de ${items.length} productos)`
                 : '🍽️ No se pudo cargar el menú en este momento';
 
-            renderVistaActual();
+            render();
             update();
             maybeShowRepeatBanner();
         }
